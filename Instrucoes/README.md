@@ -41,31 +41,14 @@ docker run -it -p 8000:8000 -v $(pwd):/data -w /data projeto-tuberculose
 
 *Nota: Mantenha esse container aberto. Todos os comandos seguintes (passos 3 a 10) serão executados **dentro** deste container.*
 
----
+## Passo 3 — Dados do Professor (Pré-processados)
 
-## Passo 3 — Baixar e Unificar os Dados do SINAN (Se necessário)
-
-Se você ainda não tiver o arquivo `tuberculose_unificado.feather` gerado na raiz:
-
-```bash
-python baixar_tuberculose_feather.py
-```
+> [!NOTE]
+> Os dados disponibilizados pelo professor (`treino.csv`, `teste1.csv`, `teste2.csv` e `tuberculose_unificado.feather`) já foram baixados e posicionados na raiz do projeto. Portanto, os scripts de download (`baixar_tuberculose_feather.py`) e preparação (`data-prep.py`) **não precisam ser executados**.
 
 ---
 
-## Passo 4 — Preparar e Dividir os Dados (Fatiamento Temporal)
-
-Execute o script de preparação para filtrar a base de dados e criar as partições de treino e teste:
-
-```bash
-python data-prep.py
-```
-
-**O que faz:** Processa os dados de forma otimizada com Polars (Lazy & Streaming) e cria os arquivos `treino.csv`, `teste1.csv` e `teste2.csv` na raiz do projeto.
-
----
-
-## Passo 5 — Treinar os Modelos de Experimento
+## Passo 4 — Treinar os Modelos de Experimento
 
 Treine os modelos baseline de comparação dentro do container:
 
@@ -78,7 +61,7 @@ python scripts/rede_neural/treino_rede_neural.py
 
 ---
 
-## Passo 6 — Treinar e Calibrar o Modelo Final de Produção
+## Passo 5 — Treinar e Calibrar o Modelo Final de Produção
 
 Execute o script de produção para treinar o classificador final de HistGradientBoosting:
 
@@ -90,7 +73,7 @@ python pipeline/pipeline_final.py
 
 ---
 
-## Passo 7 — Rodar a Análise de Features (Explicabilidade / SHAP)
+## Passo 6 — Rodar a Análise de Features (Explicabilidade / SHAP)
 
 ```bash
 python scripts/analise_features.py
@@ -100,19 +83,19 @@ python scripts/analise_features.py
 
 ---
 
-## Passo 8 — Gerar o CSV para o Dashboard da Turma
+## Passo 7 — Gerar o CSV para o Dashboard da Turma
 
-Gere a planilha de predições que será carregada no dashboard dinâmico:
+Gere a planilha de predições do modelo final para carregar no dashboard dinâmico:
 
 ```bash
 python gerar_csv.py
 ```
 
-**O que faz:** Cria o arquivo `resultados_modelo.csv` com threshold de classificação ajustado para `0.26`.
+**O que faz:** Cria ou calcula e sobrescreve o arquivo `resultados_modelo.csv` na raiz do projeto com as predições do modelo final de produção.
 
 ---
 
-## Passo 10 — Subir o Backend do App Médico
+## Passo 8 — Subir o Backend do App Médico
 
 > [!TIP]
 > **RECOMENDADO:** Para evitar erros de versão das bibliotecas Python (como conflitos no `scikit-learn` entre o Docker e o Windows local), o backend deve ser executado **dentro do Docker**.
@@ -156,7 +139,7 @@ Se você preferir rodar no Windows utilizando sua `.venv` local (e as versões d
 
 ---
 
-## Passo 10 — Abrir as Interfaces no Navegador
+## Passo 9 — Abrir as Interfaces no Navegador
 
 | Interface | Arquivo para abrir |
 |---|---|
@@ -181,12 +164,11 @@ docker run -it -p 8000:8000 -v ${PWD}:/data -w /data projeto-tuberculose
 MSYS_NO_PATHCONV=1 docker run -it -p 8000:8000 -v "/c/Users/Vinip/Desktop/projetoIA/tuberculosis-ltfu-prediction:/data" -w /data projeto-tuberculose
 
 # Comandos de treino e execução (dentro do Container)
-python data-prep.py
 python scripts/regressao_logistica/treino_regressao.py
 python scripts/rede_neural/treino_rede_neural.py
 python pipeline/pipeline_final.py
 python scripts/analise_features.py
-python gerar_csv.py
+python gerar_csv.py                           # Gerar CSV para o dashboard (Modelo Final)
 
 # Iniciar o backend (dentro do Container)
 uvicorn app.backend.main:app --host 0.0.0.0 --port 8000
@@ -206,17 +188,15 @@ Descrição de cada arquivo e pasta na raiz do projeto.
 
 | Arquivo | Descrição |
 |---|---|
-| `treino.csv` | Conjunto de treino principal — dados históricos do SINAN limpos e filtrados pelo `data-prep.py` |
+| `treino.csv` | Conjunto de treino principal — dados históricos do SINAN pré-processados pelo professor |
 | `teste1.csv` | Conjunto de validação — usado para avaliar os modelos durante o desenvolvimento |
-| `teste2.csv` | Conjunto de teste final — avaliação definitiva do modelo; só é visto no passo de retreino |
+| `teste2.csv` | Conjunto de teste final — avaliação definitiva do modelo e geração do CSV do dashboard |
 | `gerar_csv.py` | Script que usa o modelo de produção para gerar o `resultados_modelo.csv` do dashboard |
-| `data-prep.py` | Script do professor que limpa, filtra e divide os dados do SINAN nos 3 CSVs |
-| `baixar_tuberculose_feather.py` | Script auxiliar para baixar os dados brutos do SINAN em formato feather |
 | `resultados_modelo.csv` | Arquivo gerado pelo `gerar_csv.py` — saída do modelo sobre o teste2, usado no dashboard |
 | `IA.md` | Documento de briefing do projeto — objetivos, regras e escopo definidos pelo professor |
 | `README.md` | README principal do projeto (visão geral) |
 | `.gitignore` | Arquivos ignorados pelo Git (dados brutos, modelos serializados, `.venv`) |
-| `dockerfile` | Configuração Docker para containerização (criado pelo professor, não usado localmente) |
+| `dockerfile` | Configuração Docker para containerização |
 
 ---
 

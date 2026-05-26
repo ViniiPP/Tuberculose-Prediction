@@ -56,7 +56,7 @@ ALVO = "ltfu"
 THRESHOLD_BAIXO = 0.30   # < 30% → Baixo
 THRESHOLD_ALTO = 0.60    # > 60% → Alto
 
-THRESHOLD_CLASSIFICACAO = 0.26  # threshold de decisao binaria (recall ~87% no teste2)
+THRESHOLD_CLASSIFICACAO = 0.24  # threshold de decisao binaria (recall ~87% no teste2)
 # entre 30% e 60% → Médio
 
 # Colunas de saída do modelo (para o siteDados)
