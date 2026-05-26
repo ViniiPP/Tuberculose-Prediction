@@ -7,8 +7,8 @@ RUN apt update && apt install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar o PySUS
-RUN pip install --no-cache-dir pysus
+# Instalar o PySUS e dependências de Machine Learning
+RUN pip install --no-cache-dir pysus==0.15.0 polars scikit-learn matplotlib joblib shap pandas fastapi uvicorn
 
 # Criar diretório de trabalho
 WORKDIR /app

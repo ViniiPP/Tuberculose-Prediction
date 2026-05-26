@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Ferramenta de apoio à decisão clínica para avaliação de risco de abandono do tratamento de tuberculose" />
+  <title>LTFU | Avaliação de Risco de Abandono de Tratamento</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+
+  <!-- Painel histórico de pacientes -->
+  <aside id="painel-historico" class="sidebar">
+    <div class="sidebar-header">
+      <div class="nav-left">
+        <i data-lucide="users" class="w-4 h-4 text-azul-500"></i>
+        <span class="sidebar-title">Pacientes Avaliados</span>
+      </div>
+      <button onclick="alternarHistorico()" class="sidebar-close">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="lista-pacientes" class="sidebar-body"></div>
+  </aside>
+  <div id="sobreposicao-historico" class="sidebar-overlay hidden" onclick="alternarHistorico()"></div>
+
+  <!-- Painel resultado -->
+  <div id="painel-resultado" class="result-panel">
+    <div class="result-header">
+      <button onclick="fecharResultado()" class="result-close">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <span class="result-title">Resultado da Avaliação</span>
+    </div>
+    <div class="result-body">
+      <div class="result-patient">
+        <span id="resultado-nome" class="result-name">—</span>
+        <span id="resultado-idade" class="result-age">—</span>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="result-gauge-wrap">
+        <canvas id="grafico-gauge" width="220" height="220"></canvas>
+        <div class="gauge-center">
+          <span id="gauge-percentual" class="gauge-pct">—%</span>
+          <span class="gauge-sub">de risco</span>
+        </div>
+      </div>
+
+      <div id="badge-risco" class="risk-badge">—</div>
+      <p id="descricao-resultado" class="result-desc">—</p>
+
+      <!-- Resumo dos dados clínicos -->
+      <div id="resumo-clinico" class="resumo-container hidden">
+        <h4 class="resumo-titulo">Dados Clínicos & Vulnerabilidades</h4>
+        <div id="resumo-itens" class="resumo-grid"></div>
+      </div>
+
+      <button id="botao-salvar" onclick="salvarPaciente()" class="btn-save">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Salvar no histórico
+      </button>
+    </div>
+  </div>
+  <div id="sobreposicao-resultado" class="result-overlay hidden" onclick="fecharResultado()"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <button onclick="alternarHistorico()" class="menu-btn">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+      <span class="nav-brand">LTFU</span>
+      <span class="nav-tagline hidden sm:block">Avaliação de risco de abandono de tratamento</span>
+    </div>
+    <div id="contador-pacientes" class="nav-badge hidden">
+      <span id="numero-pacientes">0</span> pacientes
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <main class="main">
+    <div class="hero-card">
+      <i data-lucide="stethoscope" class="hero-icon"></i>
+      <div>
+        <h1 class="hero-title">Ferramenta de apoio à decisão clínica</h1>
+        <p class="hero-desc">
+          Preencha os dados do paciente abaixo. O modelo de Machine Learning calculará a probabilidade de abandono do tratamento de tuberculose (LTFU), auxiliando na identificação de pacientes que necessitam de acompanhamento mais próximo.
+        </p>
+      </div>
+    </div>
+
+    <form id="formulario-paciente" onsubmit="calcularRisco(event)" novalidate>
+
+      <!-- Dados do paciente -->
+      <div class="form-section">
+        <div class="section-header">
+          <i data-lucide="user" class="section-icon"></i>
+          <h2 class="section-title">Dados do Paciente</h2>
+        </div>
+        <div class="fields-grid">
+          <div class="field-group full">
+            <label class="label required">Nome completo</label>
+            <input id="campo-nome" type="text" required placeholder="Nome do paciente" class="input" />
+          </div>
+
+          <div class="field-group">
+            <label class="label required">
+              Idade (anos)
+              <span class="grupo-tooltip relative cursor-help" style="display: inline-flex; align-items: center; vertical-align: middle;">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400" style="margin-left: 4px;"></i>
+                <span class="tooltip-texto" style="position: absolute; left: 20px; top: -10px; width: 220px; background: #1f2937; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100;">
+                  Apenas adultos (≥18 anos). TB pediátrica tem protocolo clínico diferente — o modelo foi treinado exclusivamente em adultos.
+                </span>
+              </span>
+            </label>
+            <input id="campo-idade" type="number" required min="18" max="120" placeholder="Ex: 42" class="input" />
+          </div>
+
+          <div class="field-group">
+            <label class="label">Sexo</label>
+            <select id="campo-sexo" class="input">
+              <option value="">Selecione</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+              <option value="I">Ignorado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Raça / Cor</label>
+            <select id="campo-raca" class="input">
+              <option value="">Selecione</option>
+              <option value="1">Branca</option>
+              <option value="2">Preta</option>
+              <option value="3">Amarela</option>
+              <option value="4">Parda</option>
+              <option value="5">Indígena</option>
+              <option value="9">Ignorado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Escolaridade</label>
+            <select id="campo-escolaridade" class="input">
+              <option value="">Selecione</option>
+              <option value="0">Sem escolaridade</option>
+              <option value="1">Fundamental I incompleto</option>
+              <option value="2">Fundamental I completo</option>
+              <option value="3">Fundamental completo</option>
+              <option value="4">Ensino Médio completo</option>
+              <option value="5">Superior completo</option>
+              <option value="9">Ignorado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Nº de contatos registrados</label>
+            <input id="campo-contatos" type="number" min="0" placeholder="Ex: 3" class="input" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Dados clínicos -->
+      <div class="form-section">
+        <div class="section-header">
+          <i data-lucide="microscope" class="section-icon"></i>
+          <h2 class="section-title">Dados Clínicos</h2>
+        </div>
+        <div class="fields-grid">
+          <div class="field-group">
+            <label class="label">Tipo de tratamento</label>
+            <select id="campo-tratamento" class="input">
+              <option value="">Selecione</option>
+              <option value="1">Caso novo</option>
+              <option value="2">Recidiva</option>
+              <option value="3">Reingresso após abandono</option>
+              <option value="4">Não sabe</option>
+              <option value="5">Transferência</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Sorologia HIV</label>
+            <select id="campo-hiv" class="input">
+              <option value="">Selecione</option>
+              <option value="1">Positivo</option>
+              <option value="2">Negativo</option>
+              <option value="3">Em andamento</option>
+              <option value="4">Não realizado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Baciloscopia de entrada</label>
+            <select id="campo-baciloscopia" class="input">
+              <option value="">Selecione</option>
+              <option value="1">Positivo (+)</option>
+              <option value="2">Negativo</option>
+              <option value="3">Não realizado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">Raio-X de tórax</label>
+            <select id="campo-raiox" class="input">
+              <option value="">Selecione</option>
+              <option value="1">Normal</option>
+              <option value="2">Suspeito</option>
+              <option value="3">Outra patologia</option>
+              <option value="4">Não realizado</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="label">UF de notificação</label>
+            <select id="campo-uf" class="input">
+              <option value="">Selecione</option>
+              <option value="11">RO</option><option value="12">AC</option><option value="13">AM</option>
+              <option value="14">RR</option><option value="15">PA</option><option value="16">AP</option>
+              <option value="17">TO</option><option value="21">MA</option><option value="22">PI</option>
+              <option value="23">CE</option><option value="24">RN</option><option value="25">PB</option>
+              <option value="26">PE</option><option value="27">AL</option><option value="28">SE</option>
+              <option value="29">BA</option><option value="31">MG</option><option value="32">ES</option>
+              <option value="33">RJ</option><option value="35">SP</option><option value="41">PR</option>
+              <option value="42">SC</option><option value="43">RS</option><option value="50">MS</option>
+              <option value="51">MT</option><option value="52">GO</option><option value="53">DF</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agravidades e vulnerabilidades -->
+      <div class="form-section">
+        <div class="section-header">
+          <i data-lucide="alert-triangle" class="section-icon"></i>
+          <h2 class="section-title">Agravidades e Vulnerabilidades</h2>
+        </div>
+        <div class="fields-grid">
+          <div class="field-group">
+            <label class="label">Comorbidade: AIDS</label>
+            <select id="campo-aids" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Uso de álcool</label>
+            <select id="campo-alcool" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Diabetes</label>
+            <select id="campo-diabetes" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Doença mental</label>
+            <select id="campo-doenca-mental" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Uso de drogas ilícitas</label>
+            <select id="campo-drogas" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Tabagismo</label>
+            <select id="campo-tabagismo" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Privado de liberdade</label>
+            <select id="campo-privado-liberdade" class="input">
+              <option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Situação de rua</label>
+            <select id="campo-situacao-rua" class="input">
+              <option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!--Acompanhamento -->
+      <div class="form-section">
+        <div class="section-header">
+          <i data-lucide="clipboard-list" class="section-icon"></i>
+          <h2 class="section-title">Acompanhamento</h2>
+        </div>
+        <div class="fields-grid">
+          <div class="field-group">
+            <label class="label">Tratamento supervisionado (DOT)?</label>
+            <select id="campo-trat-supervisionado" class="input">
+              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Institucionalizado?</label>
+            <select id="campo-institucionalizado" class="input">
+              <option value="0">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label">Recebe benefício governamental?</label>
+            <select id="campo-beneficio" class="input">
+              <option value="9">Ignorado</option><option value="0">Não</option><option value="1">Sim</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão calcular -->
+      <div class="form-footer">
+        <button type="submit" id="botao-calcular" class="btn-calcular">
+          <i data-lucide="brain-circuit" class="w-5 h-5" id="icone-botao"></i>
+          <span id="texto-botao">Calcular probabilidade de abandono</span>
+          <div id="spinner-botao" class="spinner hidden"></div>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Modal de confirmação de remoção -->
+  <div id="modal-confirmar" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i data-lucide="alert-triangle" class="modal-icon-alert"></i>
+        <h3 class="modal-title">Confirmar Remoção</h3>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja remover o paciente <strong id="modal-paciente-nome"></strong> do histórico? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button onclick="fecharModalConfirmar()" class="btn-modal-cancelar">Cancelar</button>
+        <button id="btn-modal-confirmar-remover" class="btn-modal-remover">Remover</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

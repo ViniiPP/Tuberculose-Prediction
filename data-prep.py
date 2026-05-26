@@ -7,7 +7,15 @@ Script de preparação dos dados de Tuberculose do SINAN (todos os anos disponí
 
 import polars as pl # Polars performa melhor com grande volume de dados
 
-df = pl.read_ipc("tuberculose_unificado.feather")
+colunas = [
+    "NU_IDADE_N", "FORMA", "TRATAMENTO", "POP_RUA", "POP_LIBER", "POP_IMIG", 
+    "POP_SAUDE", "CS_GESTANT", "TEST_MOLEC", "TEST_SENSI", "SITUA_ENCE", 
+    "DT_NOTIFIC", "NU_CONTATO", "CS_SEXO", "CS_RACA", "HIV", "BACILOSC_E", 
+    "RAIOX_TORA", "SG_UF_NOT", "CS_ESCOL_N", "TRAT_SUPER", "INSTITUCIO", 
+    "AGRAVAIDS", "AGRAVALCOO", "AGRAVDIABE", "AGRAVDOENC", "AGRAVDROGA", 
+    "AGRAVTABAC", "BENEF_GOV"
+]
+df = pl.scan_ipc("tuberculose_unificado.feather").select(colunas)
 
 # limpar strings
 df = df.with_columns(
@@ -65,9 +73,9 @@ df = df.with_columns(
 
 # remover linhas que não correspondam aos valores-alvo
 df = df.drop_nulls(subset=["ltfu"])
+df = df.collect(streaming=True)
 
 ### divisão treino-teste ###
-# a divisão foi realizada com base nas datas
 df_train = df.filter(pl.col("DT_NOTIFIC").dt.year() < 2025)
 df_teste_ano = df.filter(pl.col("DT_NOTIFIC").dt.year() == 2025)
 
@@ -75,10 +83,8 @@ df_teste_ano = df_teste_ano.sort("DT_NOTIFIC", descending=False)
 
 
 total_linhas_teste = df_teste_ano.height
-ponto_corte = total_linhas_teste // 2
-
-test1= df_teste_ano.head(ponto_corte)
-test2 = df_teste_ano.tail(total_linhas_teste - ponto_corte)
+test2 = df_teste_ano.tail(20000)
+test1 = df_teste_ano.head(total_linhas_teste - 20000)
 
 ### exportar conjuntos de treino, teste1 e teste2 ###
 df_train.write_csv("treino.csv")

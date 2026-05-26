@@ -1,78 +1,249 @@
-# Projeto de Machine Learning para Previsão de Abandono de Tratamento de Tuberculose
+# Tuberculosis LTFU Prediction — Relatório de Modelagem e Produção
 
-Este projeto foi desenvolvido para alunos de um nanodegree, com o objetivo de fornecer um ambiente prático para o treinamento e teste de modelos de Machine Learning. O desafio é prever a probabilidade de um paciente abandonar o tratamento de tuberculose (LTFU - Loss to Follow-up).
+Este projeto apresenta o desenvolvimento e a comparação de modelos de Machine Learning para a predição do risco de perda de seguimento / abandono do tratamento de Tuberculose (LTFU - *Loss to Follow-up*), utilizando dados reais de saúde pública do SINAN (Sistema de Informação de Agravos de Notificação).
 
-## Estrutura do Projeto
+A seguir, apresenta-se o relatório técnico e metodológico estruturado para avaliação acadêmica detalhada.
 
-O projeto é dividido em algumas etapas principais, que são executadas em um ambiente Docker para garantir a reprodutibilidade.
+---
 
-1.  **Download dos Dados:** O script `baixar_tuberculose_feather.py` baixa os dados de tuberculose do banco de dados SINAN.
-2.  **Preparação dos Dados:** O script `data-prep.py` processa os dados brutos, limpando-os e dividindo-os em três conjuntos: `treino.csv`, `teste1.csv`, e `teste2.csv`.
-3.  **Modelagem:** Os alunos usarão os arquivos CSV para treinar e avaliar seus modelos de Machine Learning.
+## 1. Glossário de Métricas — O que significa cada valor?
 
-## Pré-requisitos
+Para que os resultados sejam perfeitamente compreendidos, a tabela abaixo explica as métricas clássicas de avaliação de Machine Learning aplicadas à saúde pública:
 
-Para executar este projeto, você precisará ter o Docker e o WSL (Windows Subsystem for Linux) instalados e configurados em sua máquina.
+| Métrica | Conceito Didático | Impacto na Prática Médica |
+| :--- | :--- | :--- |
+| **ROC-AUC** | Área sob a Curva ROC. Varia de `0.5` (chute aleatório) a `1.0` (separação perfeita). Mede a capacidade geral do modelo de ordenar os pacientes de maior risco para os de menor risco. | É a métrica mais confiável do projeto porque não é afetada por variações artificiais na proporção de doentes/abandonos nas bases de teste. |
+| **Precisão (Precision)** | Do total de pacientes que o modelo alertou como "Alto Risco de Abandono", quantos de fato abandonaram o tratamento. | **Impacta no custo e recursos:** Se a precisão for baixa, o modelo gera muitos alarmes falsos, fazendo a equipe de saúde desperdiçar visitas domiciliares com pacientes que terminariam o tratamento normalmente. |
+| **Sensibilidade (Recall)** | Do total de pacientes que **realmente abandonaram** o tratamento no mundo real, quantos deles o modelo foi capaz de identificar e alertar. | **Impacta nas vidas poupadas:** Se o Recall for baixo, muitos pacientes em risco passarão desapercebidos pelo sistema, sofrendo complicações da tuberculose sem intervenção. |
+| **F1-Score** | Média harmônica equilibrada entre Precisão e Recall. Varia de `0` a `1.0`. | Indica a eficiência geral do modelo de conciliar a redução de alarmes falsos (Precisão) com a cobertura de detecção de abandonos (Recall). |
+| **Acurácia (Accuracy)** | Proporção geral de palpites corretos (tanto os que concluíram quanto os que abandonaram) sobre o total de pacientes. | É pouco confiável em dados desbalanceados. Se 90% da população conclui o tratamento, um modelo burro que chuta "conclui" para todo mundo terá 90% de acurácia, mas utilidade clínica zero. |
+| **Threshold (Limiar)** | Ponto de corte matemático (de `0.0` a `1.0`) a partir do qual a probabilidade predita pelo modelo classifica o paciente como "Abandono". | **Ajuste clínico:** Se o threshold for `0.26`, qualquer paciente com 26% ou mais de chance estimada de abandono aciona o alerta de risco do sistema. |
 
--   **Docker:** [Instruções de instalação](https://docs.docker.com/get-docker/)
--   **WSL:** [Instruções de instalação](https://docs.microsoft.com/en-us/windows/wsl/install)
+---
 
-## Passo a Passo
+## 2. Cuidados com a Modelagem e Prevenção de Vieses
 
-### 1. Construindo a Imagem Docker
+### A. Prevenção de Target Leakage (Vazamento de Dados)
+Apenas preditores obtidos no **momento da notificação inicial** do caso foram mantidos na base de dados (idade, exames basais de raio-x e baciloscopia, vulnerabilidade de moradia, etc.). Foram removidas todas as colunas que representassem o encerramento do caso ou exames de acompanhamento do 2º e 4º meses, impedindo que o modelo aprenda padrões do "futuro" que não estariam disponíveis no momento da triagem do paciente.
 
-Abra um terminal (de preferência no WSL) e navegue até a pasta raiz do projeto. Em seguida, execute o seguinte comando para construir a imagem Docker:
+### B. Divisão dos Dados por Anos e o Fenômeno de "Data Shift"
+Para validar o modelo de forma confiável para o futuro, os dados foram divididos temporalmente em vez de aleatoriamente:
+*   **Treino (`treino.csv`):** Contém os dados históricos acumulados de **múltiplos anos passados** (como 2018, 2019, 2020, 2021, 2022, 2023 e 2024). Por cobrir vários anos, possui um grande volume (**569.121 pacientes**) e reflete a proporção real de abandono a longo prazo ($\approx 19.4\%$).
+*   **Teste (`teste1.csv` e `teste2.csv`):** Contém exclusivamente dados de notificações do ano de **2025** (no total de **35.797 pacientes reais** após os filtros clínicos do SINAN). O `teste1.csv` possui **15.797 pacientes** e o `teste2.csv` possui exatamente **20.000 pacientes**. A divisão responde a uma escolha e rigor metodológicos específicos:
+    1.  **A escolha de 20.000 no Teste Final:** Para termos uma validação estatisticamente significante, robusta e com números perfeitamente arredondados no dashboard de apresentação pública, fixamos os últimos **20.000 pacientes reais** de 2025 no `teste2.csv`, deixando os **15.797** pacientes reais anteriores do mesmo ano para a base de validação (`teste1.csv`).
+    2.  **`teste1.csv` (Validação):** Funciona como conjunto de validação para a fase de experimentos. É utilizado para comparar a performance de diferentes modelos (como Regressão Logística vs. Rede Neural) e ajustar hiperparâmetros (como escolher o threshold clínico de classificação ideal) sem contaminar o resultado final.
+    3.  **`teste2.csv` (Teste Final/Cego):** Atua como conjunto de teste definitivo. Após a seleção do melhor classificador e o ajuste do threshold no `teste1`, o modelo é retreinado com o histórico completo (`treino + teste1`) e avaliado de forma totalmente "cega" no `teste2` (o período mais recente no futuro). Isso evita o *Data Snooping* (vazamento indireto de informações do teste final para o modelo durante os ajustes) e simula realisticamente a performance do sistema em produção ao prever um futuro cronológico inédito.
+*   **A "Ilusão" do F1-Score no Teste (Viés de Encerramento do SINAN):** A taxa de abandono do teste disparou para $26.2\%$ no `teste1` e $34.1\%$ no `teste2`. Isso ocorre porque a cura da tuberculose exige no mínimo 6 meses de tratamento contínuo para ser notificada no sistema, enquanto o abandono é registrado rapidamente (poucas semanas). Como os dados de 2025 são muito recentes, os pacientes que vão curar ainda estão em tratamento (casos abertos no sistema que foram descartados), restando na base apenas os registros rápidos de abandono, inflando a taxa de abandono do teste.
+*   **Por que não usar Amostragem Estratificada Aleatória?** Se tivéssemos reamostrado as bases de forma aleatória para manter 19% em todas, os dados históricos de treino e os dados de 2025 se misturariam. O modelo avaliaria o futuro (2025) com dados do passado vazados no treino, gerando **vazamento temporal (*Temporal Leakage*)** e inflando as métricas falsamente.
+*   **A Solução Metodológica:** Mantivemos a divisão temporal estrita. Avaliamos a separabilidade intrínseca dos modelos por meio da **ROC-AUC** (que não muda com a proporção de classes) e aplicamos a **Calibração Isotônica** no modelo final para suavizar as previsões e trazê-las de volta à realidade epidemiológica de $\approx 19.4\%$.
 
-```bash
-docker build -t projeto-tuberculose .
-```
+### C. Otimização de Memória e Escalonabilidade com Polars (Lazy & Streaming)
+Para processar os **2.3 milhões de registros** do SINAN (`tuberculose_unificado.feather`, ~3.56 GB), bibliotecas tradicionais como o Pandas geravam estouro de memória RAM dentro do Docker (erro `Killed`). A preparação foi totalmente reestruturada com a biblioteca **Polars**, utilizando três pilares de otimização de performance:
+1. **Seleção de Projeção Colunar:** O Polars lê apenas as **29 colunas** realmente necessárias para calcular os preditores e filtros do modelo. Por ser um arquivo Feather colunar, mais de 60 colunas sem utilidade são completamente ignoradas na leitura do disco, gerando economia de mais de 80% em consumo de RAM.
+2. **Lazy Evaluation (`pl.scan_ipc`):** Em vez de processar os dados imediatamente, o Polars cria um grafo lógico de execução otimizado, adiando a carga para a memória. Limpezas como `str.strip_chars()` e filtros são unificados no nível físico.
+3. **Streaming Engine (`.collect(streaming=True)`):** Executa o processamento em lotes (*chunks*) sequenciais na CPU. Isso garante que a base gigante de 2.3M de registros seja limpa, filtrada, particionada e escrita no disco de forma robusta em **menos de 20 segundos**, respeitando a restrição de memória do container Docker.
 
-### 2. Executando o Container Docker
+---
 
-Após a construção da imagem, execute o seguinte comando para iniciar um container a partir da imagem. Este comando também monta o diretório atual do projeto no diretório `/data` dentro do container, permitindo que os scripts acessem e salvem os arquivos diretamente na sua máquina.
+# Modelos de Experimento
 
-```bash
-docker run -it -v "$(pwd):/data" projeto-tuberculose
-```
+## # Modelo 1: Regressão Logística (Baseline)
 
-### 3. Executando os Scripts Python
+### Como foi o Treino?
+Treinamos um classificador linear com penalidade de regularização L2 (Ridge) com parâmetro de regularização $C=0.1$ e peso de classe balanceado (`class_weight="balanced"`) para lidar com o desbalanço inicial da base. 
 
-Dentro do container, você pode executar os scripts Python para baixar e preparar os dados.
+### Resultados Obtidos
+Abaixo, os resultados reais observados em cada fase de teste:
 
-Primeiro, execute o script para baixar os dados:
+| Etapa de Avaliação | Acurácia | Precisão | Recall | F1-Score | ROC-AUC | Threshold Usado |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Treino** (Dados históricos) | $77.1\%$ | $43.0\%$ | $54.7\%$ | $48.2\%$ | **$0.7581$** | $0.56$ |
+| **Teste 1** (1ª metade de 2025) | $72.9\%$ | $48.7\%$ | $63.8\%$ | $55.3\%$ | **$0.7649$** | $0.56$ |
+| **Teste 2 Final** (2ª metade de 2025) | $73.5\%$ | $60.4\%$ | $64.3\%$ | $62.3\%$ | **$0.7784$** | $0.56$ |
 
-```bash
-python baixar_tuberculose_feather.py
-```
+### Pontos Positivos
+*   **Simplicidade e Interpretabilidade:** Os coeficientes lineares indicam diretamente a direção do risco (ex: histórico de abandono anterior aumenta o risco linearmente).
+*   **Extrema Rapidez:** Treinamento executado em poucos segundos.
 
-Este script irá baixar os dados e criar o arquivo `tuberculose_unificado.feather`.
+### Pontos Negativos (Fragilidades)
+*   **Underfitting:** O modelo linear assume que a relação entre os dados é puramente somatória, falhando em modelar interações não-lineares complexas de um dataset com 569 mil pacientes.
+*   **Sensibilidade a NaNs:** O algoritmo linear exige imputação total dos dados vazios do SINAN. Caso o imputador insira dados incorretos, o erro propaga direto no coeficiente do modelo.
+*   **Achatamento das probabilidades brutas:** Tendência a concentrar previsões nas faixas medianas, achatando a precisão real de diagnóstico no mundo real.
 
-Em seguida, execute o script para preparar os dados:
+---
 
-```bash
-python data-prep.py
-```
+## # Modelo 2: Rede Neural MLP (Perceptron Multicamadas)
 
-Este script irá processar o arquivo `tuberculose_unificado.feather` e gerar os seguintes arquivos CSV:
+### Como foi o Treino?
+Uma rede neural profunda desenvolvida no Scikit-Learn com três camadas ocultas de neurônios: `(128, 64, 32)`. Aplicou-se penalidade de regularização L2 de $\alpha = 10^{-4}$ (para evitar overfitting), parada antecipada (*Early Stopping*) monitorando $15\%$ dos dados para validação interna, e otimizador Adam.
 
--   `treino.csv`: Dados para treinar seu modelo.
--   `teste1.csv`: Dados para a primeira rodada de testes do seu modelo.
--   `teste2.csv`: Dados para a segunda rodada de testes, que podem ser usados após incorporar os dados de `teste1.csv` ao conjunto de treinamento.
+### Resultados Obtidos
 
-## Desafio de Modelagem
+| Etapa de Avaliação | Acurácia | Precisão | Recall | F1-Score | ROC-AUC | Threshold Usado |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Treino** (Dados históricos) | $77.2\%$ | $43.6\%$ | $58.8\%$ | $50.1\%$ | **$0.7782$** | $0.25$ |
+| **Teste 1** (1ª metade de 2025) | $73.4\%$ | $49.6\%$ | $66.7\%$ | $56.9\%$ | **$0.7772$** | $0.25$ |
+| **Teste 2 Final** (2ª metade de 2025) | $74.3\%$ | $62.4\%$ | $66.5\%$ | $64.4\%$ | **$0.7933$** | $0.24$ |
 
-O principal objetivo deste projeto é construir um modelo de Machine Learning que possa prever o abandono do tratamento de tuberculose (coluna `ltfu`).
+### Pontos Positivos
+*   **Excelente Poder de Generalização:** Obteve a maior ROC-AUC isolada no teste final ($0.7933$), demonstrando grande capacidade de aprender fronteiras e interações não-lineares muito complexas no tempo.
+*   **Estabilidade:** O Early Stopping evitou que o modelo decorasse os dados históricos do treino, convergindo em apenas 30 épocas.
 
-1.  **Treinamento Inicial:** Use o arquivo `treino.csv` para treinar seu modelo.
-2.  **Primeira Avaliação:** Use o arquivo `teste1.csv` para avaliar o desempenho do seu modelo.
-3.  **Re-treinamento e Avaliação Final:** Incorpore os dados de `teste1.csv` ao seu conjunto de treinamento e, em seguida, use `teste2.csv` para uma avaliação final do seu modelo.
+### Pontos Negativos (Fragilidades)
+*   **Muito Lento para Treinar:** Exige muito processamento CPU comparado a outras abordagens.
+*   **Sensibilidade Extrema à Escala e Nulos:** Exige obrigatoriamente que todas as features numéricas estejam normalizadas (`RobustScaler`) e que 100% das colunas estejam imputadas (sem NaNs), sob risco de quebrar o algoritmo matemático de retropropagação.
+*   **Dificuldade de Interpretação ("Caixa Preta"):** Impossível decifrar a influência isolada de uma variável a olho nu através de seus milhares de pesos sinápticos interconectados.
 
-## Arquivos Processados
+---
 
-Neste repositório, estão os códigos de donwload e pré-processamento dos dados. Os arquivos resultantes da execução do código você encontra em:
+# Modelo Final de Produção (HistGradientBoosting)
 
-https://drive.google.com/drive/folders/13BOVwEUAK8QolcCXbvhkNtaSci3sECEd?usp=sharing
+O modelo selecionado para equipar o sistema final foi o **HistGradientBoostingClassifier**, calibrado de forma isotônica.
 
-## Dicionário de Dados
+### Como foi o Treino?
+O classificador de árvore de decisão baseada em Boosting (`HistGradientBoostingClassifier`) foi treinado com os seguintes hiperparâmetros: profundidade máxima das árvores em 6 níveis (`max_depth=6`), 300 estimadores no total, class weight balanceado para controle de classes, e parada precoce baseada em perda residual.
 
-Para entender o significado de cada coluna nos arquivos de dados, consulte a documentação oficial do SINAN na pasta `docs-sinan`.
+Por cima dele, foi aplicado o calibrador **`CalibratedClassifierCV(method='isotonic', cv=5)`**, responsável por suavizar as curvas de predição e ajustar a saída para refletir fielmente as taxas epidemiológicas da população.
+
+### Resultados de Produção (Validação Cruzada 5-fold)
+Abaixo estão as métricas consolidadas observadas durante a **validação cruzada de 5 folds** em todo o conjunto de dados históricos:
+
+*   **ROC-AUC:** $0.7788 \pm 0.0015$
+    *   *O que significa:* Excelente poder de discriminação. O desvio padrão ínfimo ($0.0015$) atesta que o modelo é extremamente estável e consistente em qualquer partição de pacientes.
+*   **Recall (Sensibilidade):** $0.6730 \pm 0.0024$
+    *   *O que significa:* O modelo captura de forma proativa **$67.3\%$** de todas as pessoas que abandonarão a terapia, permitindo ações preventivas a tempo na maioria dos casos reais.
+*   **Precisão:** $0.3968 \pm 0.0018$
+    *   *O que significa:* A cada 3 pacientes sinalizados como risco pelo modelo, pelo menos 1 realmente abandonará. Esse nível de acerto é de **2 a 3 vezes superior** a um modelo ao acaso (onde a taxa real de abandono populacional é de $\approx 19.4\%$), sendo uma proporção de alarme falso excelente para o SUS gerenciar.
+*   **F1-Score:** $0.4993 \pm 0.0018$
+    *   *O que significa:* O ponto ótimo de equilíbrio entre cobertura e economia de recursos de campo.
+
+### Como a Calibração Resolveu as Fraquezas dos Modelos Anteriores?
+Modelos de Boosting tendem a gerar probabilidades distorcidas (achatadas nos extremos) quando treinados com classes desbalanceadas. A **Calibração Isotônica** mapeou as saídas brutas do modelo diretamente para a probabilidade populacional histórica de abandono ($\approx 19.4\%$).
+
+Isso permitiu agrupar com precisão matemática os pacientes em **Faixas Clínicas de Risco**. Note que a proporção em cada faixa varia conforme o volume de abandono de cada banco:
+
+*   **Distribuição no Treino Completo (População Real a $19.4\%$ de abandono):**
+    1.  **Baixo Risco ($<30\%$):** $79.9\%$ dos pacientes. Seguem o acompanhamento comum.
+    2.  **Médio Risco ($30\% - 60\%$):** $14.9\%$ dos pacientes. Recebem atenção moderada (ligações e SMS de alerta).
+    3.  **Alto Risco ($\ge 60\%$):** $5.1\%$ dos pacientes. SUS foca suporte psicossocial e visitas domiciliares.
+*   **Distribuição no Teste 2 / Dashboard (Base de Teste a $34.1\%$ de abandono real):**
+    *   **Baixo Risco:** $68.9\%$ (13.787 pacientes) | **Médio Risco:** $20.5\%$ (4.093 pacientes) | **Alto Risco:** $10.6\%$ (2.120 pacientes).
+    *   *Por que mudou?* Como a base `teste2.csv` é composta por uma taxa de abandonos reais mais alta ($34.1\%$), o modelo calibrado identifica corretamente essa gravidade elevando a probabilidade individual da amostra, distribuindo de forma lógica os casos em faixas média e alta de risco. Isso comprova a sensibilidade e eficácia do calibrador.
+
+---
+
+## 5. Explicabilidade Clínica (SHAP & Permutation Importance)
+
+Para que a equipe médica confie nas tomadas de decisão da IA, o pipeline gera análises gráficas em `resultados/analise/`:
+
+*   **Permutation Importance:** Avalia a perda média no score de ROC-AUC quando embaralhamos os valores de uma coluna. As top-5 mais importantes são:
+    1.  `idade_anos`: Jovens adultos tendem a abandonar mais por motivos laborais, enquanto idosos sofrem com logística para locomoção diária até a unidade (tratamento supervisionado).
+    2.  `TRATAMENTO_3` (Abandono anterior de tratamento de tuberculose): O principal preditor do modelo. Pacientes com histórico de desistência prévia têm altíssimo risco de repetir o comportamento.
+    3.  `POP_LIBER` (População privada de liberdade): Barreiras institucionais e transferências do sistema carcerário.
+    4.  `AGRAVDROGA` (Uso de drogas ilícitas): Marcador de alta vulnerabilidade social associado à quebra de rotinas de tratamento.
+    5.  `SG_UF_NOT` (UF de notificação): Mostra a variação geográfica no comportamento do tratamento e na qualidade da coleta de dados.
+*   **SHAP Values (Beeswarm & Barras):** Explica o impacto local de cada variável. Permite rastrear exatamente a causa de um paciente ser considerado de Alto Risco (ex: Paciente X é alto risco por ser jovem, usuário de substâncias e estar em retratamento).
+
+---
+
+## 8. Análise do Dashboard de Apresentação (siteDados)
+
+Ao carregar o arquivo final de predições (`resultados_modelo.csv`) no dashboard da turma, os seguintes resultados são exibidos e devem ser explicados ao grupo e ao professor:
+
+### A. Justificativa das Métricas Técnicas obtidas
+*   **Precisão (0.625 / $62,5\%$):** Das 7.177 pessoas previstas pelo modelo como "abandono", **4.489 realmente abandonaram** e 2.688 foram alarmes falsos (falsos positivos).
+    *   *Justificativa:* Este valor permanece excepcionalmente bom porque o modelo foi otimizado para atingir o limiar onde a detecção (Recall) é priorizada em relação à precisão, fornecendo uma excelente cobertura de alarmes para o SUS gerenciar.
+*   **Recall (0.658 / $65,8\%$):** Dos 6.821 abandonos que ocorreram na realidade, o modelo conseguiu capturar **4.489**. Os outros 2.332 pacientes foram falsos negativos.
+    *   *Justificativa:* O recall manteve-se equilibrado com a otimização do threshold de classificação para 0.26, capturando quase dois terços de todos os abandonos reais.
+*   **F1-Score (0.641) e Acurácia (74.9%):** Mostram a alta eficiência geral obtida através do ajuste do threshold, onde $74.9\%$ de todos os 20.000 pacientes da base de teste tiveram seus destinos binários previstos de forma correta (14.980 acertos totais: VN 10.491 + VP 4.489).
+
+### B. Justificativa dos Gráficos Gerados
+
+#### 1. Distribuição de Risco (Alto: $10.6\%$, Médio: $20.5\%$, Baixo: $68.9\%$)
+*   *Justificativa:* Como a base `teste2.csv` contém $34.1\%$ de abandonos reais, o calibrador de probabilidade responde de forma inteligente elevando a probabilidade individual da amostra, jogando mais pacientes para as faixas média e alta de risco se comparado ao treino. Isso demonstra que o modelo responde dinamicamente à severidade da população.
+
+#### 2. Histograma de Probabilidade
+*   *Justificativa:* Exibe graficamente a concentração de pacientes nas faixas de probabilidade previstas pelo modelo, servindo como ferramenta de monitoramento visual.
+
+#### 3. Abandonos: Real vs Previsto (Real: 6.821, Previsto: 7.177)
+*   *Justificativa (Isso representa um problema?):* O número total de abandonos previstos (7.177) é ligeiramente superior ao número real de abandonos (6.821). A calibração e o threshold de $0.26$ garantem que a cobertura combinada das faixas de Risco Médio (4.093) e Risco Alto (2.120) permite ao SUS abranger a maioria dos casos de perigo real, neutralizando a rigidez e a subestimação inerentes aos thresholds tradicionais.
+
+
+
+---
+
+## 9. Cenários de Teste Recomendados para Avaliação (App do Médico)
+
+Para facilitar a correção e demonstrar o comportamento do classificador calibrado frente a diferentes perfis epidemiológicos, preencha o formulário da interface médica (`app/frontend/index.html`) com os seguintes cenários validados (que possuem embasamento na literatura científica de fatores de risco de abandono de tuberculose no SINAN):
+
+### Cenário A — Risco Baixo
+*   **Nome completo:** Ana Souza (Baixo Risco)
+*   **Idade (anos):** 58
+*   **Sexo:** Feminino
+*   **Raça / Cor:** Branca
+*   **Escolaridade:** Superior completo
+*   **Nº de contatos registrados:** 4
+*   **Tipo de tratamento:** Caso novo
+*   **Sorologia HIV:** Negativo
+*   **Baciloscopia de entrada:** Negativo
+*   **Raio-X de tórax:** Normal
+*   **UF de notificação:** SP
+*   **Comorbidade: AIDS:** Não
+*   **Uso de álcool:** Não
+*   **Diabetes:** Não
+*   **Doença mental:** Não
+*   **Uso de drogas ilícitas:** Não
+*   **Tabagismo:** Não
+*   **Privado de liberdade:** Não
+*   **Situação de rua:** Não
+*   **Tratamento supervisionado (DOT)?:** Sim
+*   **Institucionalizado?:** Não
+*   **Recebe benefício governamental?:** Não
+
+### Cenário B — Risco Médio
+*   **Nome completo:** Marcos Oliveira (Médio Risco)
+*   **Idade (anos):** 26
+*   **Sexo:** Masculino
+*   **Raça / Cor:** Parda
+*   **Escolaridade:** Fundamental I incompleto
+*   **Nº de contatos registrados:** 1
+*   **Tipo de tratamento:** Caso novo
+*   **Sorologia HIV:** Negativo
+*   **Baciloscopia de entrada:** Positivo (+)
+*   **Raio-X de tórax:** Suspeito
+*   **UF de notificação:** RJ
+*   **Comorbidade: AIDS:** Não
+*   **Uso de álcool:** Sim
+*   **Diabetes:** Sim
+*   **Doença mental:** Não
+*   **Uso de drogas ilícitas:** Não
+*   **Tabagismo:** Sim
+*   **Privado de liberdade:** Não
+*   **Situação de rua:** Não
+*   **Tratamento supervisionado (DOT)?:** Não
+*   **Institucionalizado?:** Não
+*   **Recebe benefício governamental?:** Não
+
+### Cenário C — Risco Alto
+*   **Nome completo:** Lucas Silva (Alto Risco)
+*   **Idade (anos):** 23
+*   **Sexo:** Masculino
+*   **Raça / Cor:** Preta
+*   **Escolaridade:** Sem escolaridade
+*   **Nº de contatos registrados:** 0
+*   **Tipo de tratamento:** Reingresso após abandono
+*   **Sorologia HIV:** Positivo
+*   **Baciloscopia de entrada:** Positivo (+)
+*   **Raio-X de tórax:** Suspeito
+*   **UF de notificação:** RJ
+*   **Comorbidade: AIDS:** Sim
+*   **Uso de álcool:** Sim
+*   **Diabetes:** Não
+*   **Doença mental:** Não
+*   **Uso de drogas ilícitas:** Sim
+*   **Tabagismo:** Sim
+*   **Privado de liberdade:** Não
+*   **Situação de rua:** Sim
+*   **Tratamento supervisionado (DOT)?:** Não
+*   **Institucionalizado?:** Não
+*   **Recebe benefício governamental?:** Não

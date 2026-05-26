@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard de resultados do modelo de predição de abandono de tratamento de tuberculose" />
+  <title>LTFU — Dashboard de Resultados</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <i data-lucide="activity" class="logo-icon" style="color: var(--primary);"></i>
+        <div>
+          <span class="logo-title">LTFU</span>
+          <span class="logo-sub hidden sm:block">Dashboard de Resultados do Modelo</span>
+        </div>
+      </div>
+      <label id="botao-upload" for="entrada-csv" class="upload-btn">
+        <i data-lucide="upload" style="width: 16px; height: 16px;"></i>
+        Carregar CSV
+      </label>
+      <input type="file" id="entrada-csv" class="hidden" />
+    </div>
+  </header>
+
+  <main id="conteudo-principal">
+
+    <div id="zona-drop" class="drop-zone">
+      <i data-lucide="folder-open" class="drop-icon" style="color: var(--text-light); margin-bottom: 16px; width: 56px; height: 56px; display: inline-block;"></i>
+      <h2>Carregue os resultados do modelo</h2>
+      <p>Arraste e solte o arquivo <strong>.csv</strong> aqui ou clique no botão acima</p>
+      <p class="drop-hint">
+        Campos exigidos: <code>id</code> · <code>probabilidade_ltfu</code> · <code>nivel_risco</code> · <code>predicao_modelo</code> · <code>resultado_real</code>
+      </p>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="painel-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+
+      <!-- Linha KPIs -->
+      <div id="linha-kpis" class="kpi-row"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header" style="margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="bar-chart-2" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Métricas Técnicas do Modelo</h3>
+            </div>
+          </div>
+          <div id="grade-metricas" class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="grid" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Matriz de Confusão (Valores Binários)</h3>
+            </div>
+          </div>
+          <div class="confusion-matrix">
+            <div class="matrix-label-top">Realidade (Dados Reais)</div>
+            <div class="matrix-label-left">Predição (Modelo)</div>
+            <div class="matrix-wrapper">
+              <div class="matrix-header-cell"></div>
+              <div class="matrix-header-cell real-label">Abandonou</div>
+              <div class="matrix-header-cell real-label">Concluiu</div>
+              <div class="matrix-side-label pred-label">Previu<br>Abandona</div>
+              <div class="matrix-cell vp">
+                <span class="matrix-cell-title">VP (Verdadeiro Positivo)</span>
+                <span class="matrix-cell-value" id="val-vp">0</span>
+                <span class="matrix-cell-desc">Acerto de Abandono</span>
+              </div>
+              <div class="matrix-cell fp">
+                <span class="matrix-cell-title">FP (Falso Positivo)</span>
+                <span class="matrix-cell-value" id="val-fp">0</span>
+                <span class="matrix-cell-desc">Alarme Falso (Custo)</span>
+              </div>
+              <div class="matrix-side-label pred-label">Previu<br>Conclui</div>
+              <div class="matrix-cell fn">
+                <span class="matrix-cell-title">FN (Falso Negativo)</span>
+                <span class="matrix-cell-value" id="val-fn">0</span>
+                <span class="matrix-cell-desc">Risco Não Detectado</span>
+              </div>
+              <div class="matrix-cell vn">
+                <span class="matrix-cell-title">VN (Verdadeiro Negativo)</span>
+                <span class="matrix-cell-value" id="val-vn">0</span>
+                <span class="matrix-cell-desc">Acerto de Conclusão</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distribuição + Histograma -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="pie-chart" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Distribuição de Risco</h3>
+            </div>
+          </div>
+          <div class="dist-layout">
+            <div class="chart-wrap-sm">
+              <canvas id="grafico-pizza"></canvas>
+            </div>
+            <div id="barras-risco" class="risk-bars"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="bar-chart" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Histograma de Probabilidade</h3>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="grafico-histograma"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Acertos Real vs Previsto -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="check-circle" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Acertos por Nível de Risco</h3>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="grafico-acertos"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="git-compare" style="color: var(--primary); width: 18px; height: 18px;"></i>
+              <h3>Abandonos: Real vs Previsto</h3>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="grafico-real-previsto"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="card-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="table" style="color: var(--primary); width: 18px; height: 18px;"></i>
+            <h3>Tabela de Pacientes</h3>
+          </div>
+          <div class="table-controls">
+            <input type="text" id="busca-tabela" placeholder="Buscar paciente..." class="search-input" />
+            <select id="filtro-risco" class="filter-select">
+              <option value="">Todos os riscos</option>
+              <option value="alto">Alto</option>
+              <option value="medio">Médio</option>
+              <option value="baixo">Baixo</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Prob. LTFU</th>
+                <th>Risco</th>
+                <th>Previsão</th>
+                <th>Real</th>
+                <th>Acerto</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-tabela"></tbody>
+          </table>
+        </div>
+        <div id="paginacao" class="pagination"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
