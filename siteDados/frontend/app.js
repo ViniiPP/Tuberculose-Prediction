@@ -95,7 +95,6 @@ function renderizarKpis() {
     { rotulo: 'Risco Médio',    valor: qtdMedios,                     sub: pct(qtdMedios,total)+'%',  classe: 'medio' },
     { rotulo: 'Risco Baixo',    valor: qtdBaixos,                     sub: pct(qtdBaixos,total)+'%',  classe: 'baixo' },
     { rotulo: 'Prob. Média',    valor: (probMedia*100).toFixed(1)+'%',sub: 'abandono',                classe: 'primary'  },
-    { rotulo: 'Acurácia',       valor: (acuracia*100).toFixed(1)+'%', sub: acertos+' acertos',        classe: 'primary'  },
     { rotulo: 'LTFU Reais',     valor: ltfuReais,                     sub: pct(ltfuReais,total)+'%',  classe: 'alto'   },
   ];
 

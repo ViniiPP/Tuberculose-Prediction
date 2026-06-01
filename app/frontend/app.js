@@ -78,17 +78,17 @@ function preencherFormulario(paciente) {
   document.getElementById('campo-baciloscopia').value = f.BACILOSC_E || '';
   document.getElementById('campo-raiox').value = f.RAIOX_TORA || '';
   document.getElementById('campo-uf').value = f.SG_UF_NOT || '';
-  document.getElementById('campo-aids').value = f.AGRAVAIDS !== undefined ? f.AGRAVAIDS : '9';
-  document.getElementById('campo-alcool').value = f.AGRAVALCOO !== undefined ? f.AGRAVALCOO : '9';
-  document.getElementById('campo-diabetes').value = f.AGRAVDIABE !== undefined ? f.AGRAVDIABE : '9';
-  document.getElementById('campo-doenca-mental').value = f.AGRAVDOENC !== undefined ? f.AGRAVDOENC : '9';
-  document.getElementById('campo-drogas').value = f.AGRAVDROGA !== undefined ? f.AGRAVDROGA : '9';
-  document.getElementById('campo-tabagismo').value = f.AGRAVTABAC !== undefined ? f.AGRAVTABAC : '9';
-  document.getElementById('campo-privado-liberdade').value = f.POP_LIBER !== undefined ? f.POP_LIBER : '2';
-  document.getElementById('campo-situacao-rua').value = f.POP_RUA !== undefined ? f.POP_RUA : '2';
-  document.getElementById('campo-trat-supervisionado').value = f.TRAT_SUPER !== undefined ? f.TRAT_SUPER : '9';
-  document.getElementById('campo-institucionalizado').value = f.INSTITUCIO !== undefined ? f.INSTITUCIO : '0';
-  document.getElementById('campo-beneficio').value = f.BENEF_GOV !== undefined ? f.BENEF_GOV : '9';
+  document.getElementById('campo-aids').value = f.AGRAVAIDS !== undefined ? f.AGRAVAIDS : '';
+  document.getElementById('campo-alcool').value = f.AGRAVALCOO !== undefined ? f.AGRAVALCOO : '';
+  document.getElementById('campo-diabetes').value = f.AGRAVDIABE !== undefined ? f.AGRAVDIABE : '';
+  document.getElementById('campo-doenca-mental').value = f.AGRAVDOENC !== undefined ? f.AGRAVDOENC : '';
+  document.getElementById('campo-drogas').value = f.AGRAVDROGA !== undefined ? f.AGRAVDROGA : '';
+  document.getElementById('campo-tabagismo').value = f.AGRAVTABAC !== undefined ? f.AGRAVTABAC : '';
+  document.getElementById('campo-privado-liberdade').value = f.POP_LIBER !== undefined ? f.POP_LIBER : '';
+  document.getElementById('campo-situacao-rua').value = f.POP_RUA !== undefined ? f.POP_RUA : '';
+  document.getElementById('campo-trat-supervisionado').value = f.TRAT_SUPER !== undefined ? f.TRAT_SUPER : '';
+  document.getElementById('campo-institucionalizado').value = f.INSTITUCIO !== undefined ? f.INSTITUCIO : '';
+  document.getElementById('campo-beneficio').value = f.BENEF_GOV !== undefined ? f.BENEF_GOV : '';
 }
 
 function atualizarContadorPacientes() {
@@ -169,9 +169,66 @@ function fecharResultado() {
   document.getElementById('resumo-clinico').classList.add('hidden');
 }
 
+// Formulário — Validação obrigatória
+function validarCamposObrigatorios() {
+  const nome = document.getElementById('campo-nome');
+  const idade = document.getElementById('campo-idade');
+
+  nome.value = nome.value.trim();
+
+  nome.classList.remove('input-erro');
+  idade.classList.remove('input-erro');
+
+  if (!nome.value) {
+    nome.classList.add('input-erro');
+    nome.focus();
+    mostrarAvisoFormulario('Preencha o nome completo do paciente antes de calcular.');
+    return false;
+  }
+
+  if (!idade.value) {
+    idade.classList.add('input-erro');
+    idade.focus();
+    mostrarAvisoFormulario('Preencha a idade do paciente antes de calcular.');
+    return false;
+  }
+
+  const idadeNumero = parseInt(idade.value);
+  if (isNaN(idadeNumero) || idadeNumero < 18 || idadeNumero > 120) {
+    idade.classList.add('input-erro');
+    idade.focus();
+    mostrarAvisoFormulario('A idade deve estar entre 18 e 120 anos.');
+    return false;
+  }
+
+  return true;
+}
+
+function mostrarAvisoFormulario(mensagem) {
+  const anterior = document.getElementById('toast-aviso-formulario');
+  if (anterior) anterior.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'toast-aviso-formulario';
+  toast.className = 'toast-erro toast-aviso';
+  toast.innerHTML = `
+    <span class="toast-icon">⚠️</span>
+    <div class="toast-body">
+      <strong>Campos obrigatórios</strong>
+      <span>${mensagem}</span>
+    </div>
+    <button onclick="this.parentElement.remove()" class="toast-close">✕</button>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+}
+
 // Formulário — Calcular Risco
 async function calcularRisco(evento) {
   evento.preventDefault();
+
+  if (!validarCamposObrigatorios()) return;
+
   definirCarregando(true);
 
   const dadosPaciente = coletarDados();
@@ -210,17 +267,17 @@ function coletarDados() {
     BACILOSC_E:  document.getElementById('campo-baciloscopia').value || null,
     RAIOX_TORA:  document.getElementById('campo-raiox').value || null,
     SG_UF_NOT:   document.getElementById('campo-uf').value || null,
-    AGRAVAIDS:   document.getElementById('campo-aids').value,
-    AGRAVALCOO:  document.getElementById('campo-alcool').value,
-    AGRAVDIABE:  document.getElementById('campo-diabetes').value,
-    AGRAVDOENC:  document.getElementById('campo-doenca-mental').value,
-    AGRAVDROGA:  document.getElementById('campo-drogas').value,
-    AGRAVTABAC:  document.getElementById('campo-tabagismo').value,
-    POP_LIBER:   document.getElementById('campo-privado-liberdade').value,
-    POP_RUA:     document.getElementById('campo-situacao-rua').value,
-    TRAT_SUPER:  document.getElementById('campo-trat-supervisionado').value,
-    INSTITUCIO:  document.getElementById('campo-institucionalizado').value,
-    BENEF_GOV:   document.getElementById('campo-beneficio').value,
+    AGRAVAIDS:   document.getElementById('campo-aids').value || null,
+    AGRAVALCOO:  document.getElementById('campo-alcool').value || null,
+    AGRAVDIABE:  document.getElementById('campo-diabetes').value || null,
+    AGRAVDOENC:  document.getElementById('campo-doenca-mental').value || null,
+    AGRAVDROGA:  document.getElementById('campo-drogas').value || null,
+    AGRAVTABAC:  document.getElementById('campo-tabagismo').value || null,
+    POP_LIBER:   document.getElementById('campo-privado-liberdade').value || null,
+    POP_RUA:     document.getElementById('campo-situacao-rua').value || null,
+    TRAT_SUPER:  document.getElementById('campo-trat-supervisionado').value || null,
+    INSTITUCIO:  document.getElementById('campo-institucionalizado').value || null,
+    BENEF_GOV:   document.getElementById('campo-beneficio').value || null,
   };
 }
 
@@ -244,6 +301,17 @@ function salvarPaciente() {
   botaoSalvar.style.background = 'var(--baixo)';
   botaoSalvar.style.cursor = 'not-allowed';
   lucide.createIcons();
+
+  limparFormulario();
+}
+
+function limparFormulario() {
+  const formulario = document.getElementById('formulario-paciente');
+  formulario.reset();
+
+  document.querySelectorAll('#formulario-paciente .input').forEach((campo) => {
+    campo.classList.remove('input-erro');
+  });
 }
 
 

@@ -322,6 +322,10 @@ body {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(91,155,213,.15);
 }
+.input.input-erro {
+  border-color: var(--alto);
+  box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+}
 .input::placeholder { color: var(--text-light); }
 
 /* footer form */
@@ -410,11 +414,53 @@ body {
   transition: background .15s;
 }
 .toast-close:hover { background: var(--bg); }
+.toast-aviso {
+  border-color: #F59E0B;
+  border-left-color: #F59E0B;
+}
+.toast-aviso .toast-body strong {
+  color: #B45309;
+}
 
-.tooltip-texto {
+.grupo-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 4px;
+  cursor: help;
+  z-index: 10001;
+}
+.grupo-tooltip .tooltip-texto {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: 260px;
+  background: #1f2937;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10002;
   visibility: hidden;
   opacity: 0;
   transition: opacity .15s;
+  pointer-events: none;
+  white-space: normal;
+}
+.grupo-tooltip .tooltip-texto::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
 }
 .grupo-tooltip:hover .tooltip-texto {
   visibility: visible;

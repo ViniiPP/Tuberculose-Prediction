@@ -94,7 +94,7 @@
       </div>
     </div>
 
-    <form id="formulario-paciente" onsubmit="calcularRisco(event)" novalidate>
+    <form id="formulario-paciente" onsubmit="calcularRisco(event)">
 
       <!-- Dados do paciente -->
       <div class="form-section">
@@ -111,9 +111,9 @@
           <div class="field-group">
             <label class="label required">
               Idade (anos)
-              <span class="grupo-tooltip relative cursor-help" style="display: inline-flex; align-items: center; vertical-align: middle;">
-                <i data-lucide="info" class="w-3 h-3 text-gray-400" style="margin-left: 4px;"></i>
-                <span class="tooltip-texto" style="position: absolute; left: 20px; top: -10px; width: 220px; background: #1f2937; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100;">
+              <span class="grupo-tooltip">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                <span class="tooltip-texto">
                   Apenas adultos (≥18 anos). TB pediátrica tem protocolo clínico diferente — o modelo foi treinado exclusivamente em adultos.
                 </span>
               </span>
@@ -244,49 +244,49 @@
           <div class="field-group">
             <label class="label">Comorbidade: AIDS</label>
             <select id="campo-aids" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Uso de álcool</label>
             <select id="campo-alcool" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Diabetes</label>
             <select id="campo-diabetes" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Doença mental</label>
             <select id="campo-doenca-mental" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Uso de drogas ilícitas</label>
             <select id="campo-drogas" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Tabagismo</label>
             <select id="campo-tabagismo" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Privado de liberdade</label>
             <select id="campo-privado-liberdade" class="input">
-              <option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Situação de rua</label>
             <select id="campo-situacao-rua" class="input">
-              <option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
         </div>
@@ -302,19 +302,19 @@
           <div class="field-group">
             <label class="label">Tratamento supervisionado (DOT)?</label>
             <select id="campo-trat-supervisionado" class="input">
-              <option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Institucionalizado?</label>
             <select id="campo-institucionalizado" class="input">
-              <option value="0">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="0">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
             <label class="label">Recebe benefício governamental?</label>
             <select id="campo-beneficio" class="input">
-              <option value="9">Ignorado</option><option value="0">Não</option><option value="1">Sim</option>
+              <option value="">Selecione</option><option value="9">Ignorado</option><option value="0">Não</option><option value="1">Sim</option>
             </select>
           </div>
         </div>

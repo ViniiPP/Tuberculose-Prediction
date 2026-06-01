@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import sys
 import os
@@ -19,7 +19,7 @@ app.add_middleware(
 
 
 class PacienteInput(BaseModel):
-    idade_anos: Optional[int] = None
+    idade_anos: int = Field(..., ge=18, le=120)
     CS_SEXO: Optional[str] = None
     CS_RACA: Optional[str] = None
     CS_ESCOL_N: Optional[str] = None
@@ -29,17 +29,17 @@ class PacienteInput(BaseModel):
     BACILOSC_E: Optional[str] = None
     RAIOX_TORA: Optional[str] = None
     SG_UF_NOT: Optional[str] = None
-    AGRAVAIDS: Optional[str] = "9"
-    AGRAVALCOO: Optional[str] = "9"
-    AGRAVDIABE: Optional[str] = "9"
-    AGRAVDOENC: Optional[str] = "9"
-    AGRAVDROGA: Optional[str] = "9"
-    AGRAVTABAC: Optional[str] = "9"
-    POP_LIBER: Optional[str] = "2"
-    POP_RUA: Optional[str] = "2"
-    TRAT_SUPER: Optional[str] = "9"
-    INSTITUCIO: Optional[str] = "0"
-    BENEF_GOV: Optional[str] = "9"
+    AGRAVAIDS: Optional[str] = None
+    AGRAVALCOO: Optional[str] = None
+    AGRAVDIABE: Optional[str] = None
+    AGRAVDOENC: Optional[str] = None
+    AGRAVDROGA: Optional[str] = None
+    AGRAVTABAC: Optional[str] = None
+    POP_LIBER: Optional[str] = None
+    POP_RUA: Optional[str] = None
+    TRAT_SUPER: Optional[str] = None
+    INSTITUCIO: Optional[str] = None
+    BENEF_GOV: Optional[str] = None
 
 
 @app.get("/")

@@ -58,62 +58,79 @@ def nomes_features(preprocessador):
 
 def validacao_cruzada(modelo_base, X_proc, y):
     print("\n=== Validação Cruzada (5-fold) ===")
+
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
     metricas = {
-        "ROC-AUC":   ("roc_auc",   None),
-        "F1":        ("f1",        None),
-        "Precisão":  ("precision", None),
-        "Recall":    ("recall",    None),
+        "ROC-AUC": "roc_auc",
+        "F1": "f1",
+        "Precisão": "precision",
+        "Recall": "recall",
     }
+
     resultados = {}
-    for nome_metrica, (scoring, _) in metricas.items():
-        scores = cross_val_score(modelo_base, X_proc, y, cv=cv,
-                                 scoring=scoring, n_jobs=-1)
+
+    for nome_metrica, scoring in metricas.items():
+        scores = cross_val_score(
+            modelo_base,
+            X_proc,
+            y,
+            cv=cv,
+            scoring=scoring,
+            n_jobs=-1
+        )
+
         resultados[nome_metrica] = scores
         print(f"  {nome_metrica}: {scores.mean():.4f} ± {scores.std():.4f}")
 
-    # Gráfico
-    fig, ax = plt.subplots(figsize=(9, 5))
-    dados_box = [resultados[m] for m in resultados]
-    bp = ax.boxplot(dados_box, patch_artist=True, widths=0.45,
-                    showmeans=True, meanprops={"marker":"o", "markerfacecolor":"white", "markeredgecolor":"#1E293B", "markersize": 6})
-    
-    # Cores modernas para as caixas: Azul (ROC-AUC), Verde (F1), Laranja (Precisão), Roxo (Recall)
-    cores = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"]
-    for patch, cor in zip(bp['boxes'], cores):
-        patch.set_facecolor(cor)
-        patch.set_alpha(0.75)
-        patch.set_edgecolor('#1E293B')
-        patch.set_linewidth(1.2)
-        
-    for median in bp['medians']:
-        median.set_color('#1E293B')
-        median.set_linewidth(2)
-        
-    for whisker in bp['whiskers']:
-        whisker.set_color('#64748B')
-        whisker.set_linewidth(1.2)
-        whisker.set_linestyle('--')
-        
-    for cap in bp['caps']:
-        cap.set_color('#64748B')
-        cap.set_linewidth(1.2)
+    nomes_metricas = list(resultados.keys())
+    medias = [resultados[nome].mean() for nome in nomes_metricas]
+    desvios = [resultados[nome].std() for nome in nomes_metricas]
 
-    ax.set_xticks(range(1, len(resultados) + 1))
-    ax.set_xticklabels(list(resultados.keys()), fontsize=10, fontweight='bold')
-    ax.set_title("Validação Cruzada — 5-fold (Desempenho do Modelo)", fontsize=12, fontweight='bold', pad=15)
-    ax.set_ylabel("Score", fontsize=10, labelpad=8)
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    cores = ["#2563EB", "#10B981", "#F59E0B", "#8B5CF6"]
+
+    barras = ax.bar(
+        nomes_metricas,
+        medias,
+        yerr=desvios,
+        capsize=8,
+        color=cores,
+        edgecolor="#1E293B",
+        linewidth=1.2,
+        alpha=0.9
+    )
+
+    ax.set_title(
+        "Validação Cruzada — 5-fold (Desempenho do Modelo)",
+        fontsize=13,
+        fontweight="bold",
+        pad=15
+    )
+
+    ax.set_ylabel("Score médio", fontsize=10, labelpad=8)
+    ax.set_ylim(0, 1)
     ax.grid(axis="y", linestyle=":", alpha=0.5)
-    
-    todos_valores = np.concatenate(dados_box)
-    ymin, ymax = todos_valores.min(), todos_valores.max()
-    margem = (ymax - ymin) * 0.15 if ymax != ymin else 0.05
-    ax.set_ylim(ymin - margem, ymax + margem)
-    
+
+    for barra, media, desvio in zip(barras, medias, desvios):
+        altura = barra.get_height()
+
+        ax.text(
+            barra.get_x() + barra.get_width() / 2,
+            altura + 0.025,
+            f"{media:.3f}\n±{desvio:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            fontweight="bold"
+        )
+
     plt.tight_layout()
     plt.savefig(os.path.join(SAIDA, "validacao_cruzada.png"), dpi=150)
     plt.close()
-    print(f"  Gráfico salvo.")
+
+    print("  Gráfico salvo.")
     return resultados
 
 
