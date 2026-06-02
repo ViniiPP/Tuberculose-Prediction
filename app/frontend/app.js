@@ -171,33 +171,74 @@ function fecharResultado() {
 
 // Formulário — Validação obrigatória
 function validarCamposObrigatorios() {
-  const nome = document.getElementById('campo-nome');
-  const idade = document.getElementById('campo-idade');
+  const camposIds = [
+    'campo-nome', 'campo-idade', 'campo-sexo', 'campo-raca', 'campo-escolaridade',
+    'campo-contatos', 'campo-tratamento', 'campo-hiv', 'campo-baciloscopia',
+    'campo-raiox', 'campo-uf', 'campo-aids', 'campo-alcool', 'campo-diabetes',
+    'campo-doenca-mental', 'campo-drogas', 'campo-tabagismo', 'campo-privado-liberdade',
+    'campo-situacao-rua', 'campo-trat-supervisionado', 'campo-institucionalizado', 'campo-beneficio'
+  ];
+  
+  camposIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('input-erro');
+  });
 
+  const nome = document.getElementById('campo-nome');
   nome.value = nome.value.trim();
 
-  nome.classList.remove('input-erro');
-  idade.classList.remove('input-erro');
+  const campos = [
+    { id: 'campo-nome', nome: 'o nome completo' },
+    { id: 'campo-idade', nome: 'a idade' },
+    { id: 'campo-sexo', nome: 'o sexo' },
+    { id: 'campo-raca', nome: 'a raça / cor' },
+    { id: 'campo-escolaridade', nome: 'a escolaridade' },
+    { id: 'campo-contatos', nome: 'o número de contatos' },
+    { id: 'campo-tratamento', nome: 'o tipo de tratamento' },
+    { id: 'campo-hiv', nome: 'a sorologia HIV' },
+    { id: 'campo-baciloscopia', nome: 'a baciloscopia de entrada' },
+    { id: 'campo-raiox', nome: 'o raio-X de tórax' },
+    { id: 'campo-uf', nome: 'a UF de notificação' },
+    { id: 'campo-aids', nome: 'a comorbidade AIDS' },
+    { id: 'campo-alcool', nome: 'o uso de álcool' },
+    { id: 'campo-diabetes', nome: 'a diabetes' },
+    { id: 'campo-doenca-mental', nome: 'a doença mental' },
+    { id: 'campo-drogas', nome: 'o uso de drogas ilícitas' },
+    { id: 'campo-tabagismo', nome: 'o tabagismo' },
+    { id: 'campo-privado-liberdade', nome: 'se é privado de liberdade' },
+    { id: 'campo-situacao-rua', nome: 'a situação de rua' },
+    { id: 'campo-trat-supervisionado', nome: 'se o tratamento é supervisionado (DOT)' },
+    { id: 'campo-institucionalizado', nome: 'se é institucionalizado' },
+    { id: 'campo-beneficio', nome: 'se recebe benefício governamental' }
+  ];
 
-  if (!nome.value) {
-    nome.classList.add('input-erro');
-    nome.focus();
-    mostrarAvisoFormulario('Preencha o nome completo do paciente antes de calcular.');
-    return false;
+  for (const campo of campos) {
+    const el = document.getElementById(campo.id);
+    if (!el || el.value === '') {
+      if (el) {
+        el.classList.add('input-erro');
+        el.focus();
+      }
+      mostrarAvisoFormulario(`Preencha ou selecione ${campo.nome} antes de calcular.`);
+      return false;
+    }
   }
 
-  if (!idade.value) {
-    idade.classList.add('input-erro');
-    idade.focus();
-    mostrarAvisoFormulario('Preencha a idade do paciente antes de calcular.');
-    return false;
-  }
-
+  const idade = document.getElementById('campo-idade');
   const idadeNumero = parseInt(idade.value);
   if (isNaN(idadeNumero) || idadeNumero < 18 || idadeNumero > 120) {
     idade.classList.add('input-erro');
     idade.focus();
     mostrarAvisoFormulario('A idade deve estar entre 18 e 120 anos.');
+    return false;
+  }
+
+  const contatos = document.getElementById('campo-contatos');
+  const contatosNumero = parseInt(contatos.value);
+  if (isNaN(contatosNumero) || contatosNumero < 0) {
+    contatos.classList.add('input-erro');
+    contatos.focus();
+    mostrarAvisoFormulario('O número de contatos não pode ser negativo.');
     return false;
   }
 

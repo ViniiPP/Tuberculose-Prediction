@@ -94,7 +94,7 @@
       </div>
     </div>
 
-    <form id="formulario-paciente" onsubmit="calcularRisco(event)">
+    <form id="formulario-paciente" onsubmit="calcularRisco(event)" novalidate>
 
       <!-- Dados do paciente -->
       <div class="form-section">
@@ -122,8 +122,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Sexo</label>
-            <select id="campo-sexo" class="input">
+            <label class="label required">Sexo</label>
+            <select id="campo-sexo" class="input" required>
               <option value="">Selecione</option>
               <option value="M">Masculino</option>
               <option value="F">Feminino</option>
@@ -132,8 +132,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Raça / Cor</label>
-            <select id="campo-raca" class="input">
+            <label class="label required">Raça / Cor</label>
+            <select id="campo-raca" class="input" required>
               <option value="">Selecione</option>
               <option value="1">Branca</option>
               <option value="2">Preta</option>
@@ -145,8 +145,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Escolaridade</label>
-            <select id="campo-escolaridade" class="input">
+            <label class="label required">Escolaridade</label>
+            <select id="campo-escolaridade" class="input" required>
               <option value="">Selecione</option>
               <option value="0">Sem escolaridade</option>
               <option value="1">Fundamental I incompleto</option>
@@ -159,8 +159,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Nº de contatos registrados</label>
-            <input id="campo-contatos" type="number" min="0" placeholder="Ex: 3" class="input" />
+            <label class="label required">Nº de contatos registrados</label>
+            <input id="campo-contatos" type="number" min="0" placeholder="Ex: 3" class="input" required />
           </div>
         </div>
       </div>
@@ -173,8 +173,8 @@
         </div>
         <div class="fields-grid">
           <div class="field-group">
-            <label class="label">Tipo de tratamento</label>
-            <select id="campo-tratamento" class="input">
+            <label class="label required">Tipo de tratamento</label>
+            <select id="campo-tratamento" class="input" required>
               <option value="">Selecione</option>
               <option value="1">Caso novo</option>
               <option value="2">Recidiva</option>
@@ -185,8 +185,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Sorologia HIV</label>
-            <select id="campo-hiv" class="input">
+            <label class="label required">Sorologia HIV</label>
+            <select id="campo-hiv" class="input" required>
               <option value="">Selecione</option>
               <option value="1">Positivo</option>
               <option value="2">Negativo</option>
@@ -196,8 +196,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Baciloscopia de entrada</label>
-            <select id="campo-baciloscopia" class="input">
+            <label class="label required">Baciloscopia de entrada</label>
+            <select id="campo-baciloscopia" class="input" required>
               <option value="">Selecione</option>
               <option value="1">Positivo (+)</option>
               <option value="2">Negativo</option>
@@ -206,8 +206,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">Raio-X de tórax</label>
-            <select id="campo-raiox" class="input">
+            <label class="label required">Raio-X de tórax</label>
+            <select id="campo-raiox" class="input" required>
               <option value="">Selecione</option>
               <option value="1">Normal</option>
               <option value="2">Suspeito</option>
@@ -217,8 +217,8 @@
           </div>
 
           <div class="field-group">
-            <label class="label">UF de notificação</label>
-            <select id="campo-uf" class="input">
+            <label class="label required">UF de notificação</label>
+            <select id="campo-uf" class="input" required>
               <option value="">Selecione</option>
               <option value="11">RO</option><option value="12">AC</option><option value="13">AM</option>
               <option value="14">RR</option><option value="15">PA</option><option value="16">AP</option>
@@ -242,50 +242,50 @@
         </div>
         <div class="fields-grid">
           <div class="field-group">
-            <label class="label">Comorbidade: AIDS</label>
-            <select id="campo-aids" class="input">
+            <label class="label required">Comorbidade: AIDS</label>
+            <select id="campo-aids" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Uso de álcool</label>
-            <select id="campo-alcool" class="input">
+            <label class="label required">Uso de álcool</label>
+            <select id="campo-alcool" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Diabetes</label>
-            <select id="campo-diabetes" class="input">
+            <label class="label required">Diabetes</label>
+            <select id="campo-diabetes" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Doença mental</label>
-            <select id="campo-doenca-mental" class="input">
+            <label class="label required">Doença mental</label>
+            <select id="campo-doenca-mental" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Uso de drogas ilícitas</label>
-            <select id="campo-drogas" class="input">
+            <label class="label required">Uso de drogas ilícitas</label>
+            <select id="campo-drogas" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Tabagismo</label>
-            <select id="campo-tabagismo" class="input">
+            <label class="label required">Tabagismo</label>
+            <select id="campo-tabagismo" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Privado de liberdade</label>
-            <select id="campo-privado-liberdade" class="input">
+            <label class="label required">Privado de liberdade</label>
+            <select id="campo-privado-liberdade" class="input" required>
               <option value="">Selecione</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Situação de rua</label>
-            <select id="campo-situacao-rua" class="input">
+            <label class="label required">Situação de rua</label>
+            <select id="campo-situacao-rua" class="input" required>
               <option value="">Selecione</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
@@ -300,20 +300,20 @@
         </div>
         <div class="fields-grid">
           <div class="field-group">
-            <label class="label">Tratamento supervisionado (DOT)?</label>
-            <select id="campo-trat-supervisionado" class="input">
+            <label class="label required">Tratamento supervisionado (DOT)?</label>
+            <select id="campo-trat-supervisionado" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="2">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Institucionalizado?</label>
-            <select id="campo-institucionalizado" class="input">
+            <label class="label required">Institucionalizado?</label>
+            <select id="campo-institucionalizado" class="input" required>
               <option value="">Selecione</option><option value="0">Não</option><option value="1">Sim</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="label">Recebe benefício governamental?</label>
-            <select id="campo-beneficio" class="input">
+            <label class="label required">Recebe benefício governamental?</label>
+            <select id="campo-beneficio" class="input" required>
               <option value="">Selecione</option><option value="9">Ignorado</option><option value="0">Não</option><option value="1">Sim</option>
             </select>
           </div>
