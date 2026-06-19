@@ -50,9 +50,9 @@ Abaixo, os resultados reais observados em cada fase de teste:
 
 | Etapa de Avaliação | Acurácia | Precisão | Recall | F1-Score | ROC-AUC | Threshold Usado |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Treino** (Dados históricos) | $77.1\%$ | $43.0\%$ | $54.7\%$ | $48.2\%$ | **$0.7581$** | $0.56$ |
-| **Teste 1** (1ª metade de 2025) | $72.9\%$ | $48.7\%$ | $63.8\%$ | $55.3\%$ | **$0.7649$** | $0.56$ |
-| **Teste 2 Final** (2ª metade de 2025) | $73.5\%$ | $60.4\%$ | $64.3\%$ | $62.3\%$ | **$0.7784$** | $0.56$ |
+| **Treino** (Dados históricos) | $77.1\%$ | $43.0\%$ | $54.8\%$ | $48.2\%$ | **$0.7587$** | $0.56$ |
+| **Teste 1** (1ª metade de 2025) | $73.2\%$ | $66.7\%$ | $78.0\%$ | $71.9\%$ | **$0.8133$** | $0.56$ |
+| **Teste 2 Final** (2ª metade de 2025) | $77.3\%$ | $82.0\%$ | $86.3\%$ | $84.1\%$ | **$0.8193$** | $0.56$ |
 
 ### Pontos Positivos
 *   **Simplicidade e Interpretabilidade:** Os coeficientes lineares indicam diretamente a direção do risco (ex: histórico de abandono anterior aumenta o risco linearmente).
@@ -74,9 +74,9 @@ Uma rede neural profunda desenvolvida no Scikit-Learn com três camadas ocultas 
 
 | Etapa de Avaliação | Acurácia | Precisão | Recall | F1-Score | ROC-AUC | Threshold Usado |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Treino** (Dados históricos) | $77.2\%$ | $43.6\%$ | $58.8\%$ | $50.1\%$ | **$0.7782$** | $0.25$ |
-| **Teste 1** (1ª metade de 2025) | $73.4\%$ | $49.6\%$ | $66.7\%$ | $56.9\%$ | **$0.7772$** | $0.25$ |
-| **Teste 2 Final** (2ª metade de 2025) | $74.3\%$ | $62.4\%$ | $66.5\%$ | $64.4\%$ | **$0.7933$** | $0.24$ |
+| **Treino** (Dados históricos) | $77.4\%$ | $43.8\%$ | $57.6\%$ | $49.7\%$ | **$0.7756$** | $0.26$ |
+| **Teste 1** (1ª metade de 2025) | $74.6\%$ | $68.5\%$ | $78.3\%$ | $73.1\%$ | **$0.8165$** | $0.26$ |
+| **Teste 2 Final** (2ª metade de 2025) | $80.0\%$ | $84.7\%$ | $87.0\%$ | $85.8\%$ | **$0.8379$** | $0.24$ |
 
 ### Pontos Positivos
 *   **Excelente Poder de Generalização:** Obteve a maior ROC-AUC isolada no teste final ($0.7933$), demonstrando grande capacidade de aprender fronteiras e interações não-lineares muito complexas no tempo.
@@ -101,27 +101,35 @@ Por cima dele, foi aplicado o calibrador **`CalibratedClassifierCV(method='isoto
 ### Resultados de Produção (Validação Cruzada 5-fold)
 Abaixo estão as métricas consolidadas observadas durante a **validação cruzada de 5 folds** em todo o conjunto de dados históricos:
 
-*   **ROC-AUC:** $0.7788 \pm 0.0015$
-    *   *O que significa:* Excelente poder de discriminação. O desvio padrão ínfimo ($0.0015$) atesta que o modelo é extremamente estável e consistente em qualquer partição de pacientes.
-*   **Recall (Sensibilidade):** $0.6730 \pm 0.0024$
+*   **ROC-AUC:** $0.7774 \pm 0.0017$
+    *   *O que significa:* Excelente poder de discriminação. O desvio padrão ínfimo ($0.0017$) atesta que o modelo é extremamente estável e consistente em qualquer partição de pacientes.
+*   **Recall (Sensibilidade):** $0.6733 \pm 0.0037$
     *   *O que significa:* O modelo captura de forma proativa **$67.3\%$** de todas as pessoas que abandonarão a terapia, permitindo ações preventivas a tempo na maioria dos casos reais.
-*   **Precisão:** $0.3968 \pm 0.0018$
-    *   *O que significa:* A cada 3 pacientes sinalizados como risco pelo modelo, pelo menos 1 realmente abandonará. Esse nível de acerto é de **2 a 3 vezes superior** a um modelo ao acaso (onde a taxa real de abandono populacional é de $\approx 19.4\%$), sendo uma proporção de alarme falso excelente para o SUS gerenciar.
-*   **F1-Score:** $0.4993 \pm 0.0018$
+*   **Precisão:** $0.3852 \pm 0.0014$
+    *   *O que significa:* A cada 2,5 pacientes sinalizados como risco pelo modelo, 1 realmente abandonará. Esse nível de acerto é o **dobro** de um modelo ao acaso (onde a taxa real de abandono populacional é de $\approx 19.5\%$), sendo uma proporção de alarme falso excelente para o SUS gerenciar.
+*   **F1-Score:** $0.4900 \pm 0.0019$
     *   *O que significa:* O ponto ótimo de equilíbrio entre cobertura e economia de recursos de campo.
+
+### Resultados no Conjunto de Teste 2 (Produção Final)
+Quando avaliado no conjunto não-visto mais difícil (`teste2.csv`), com threshold configurado para `0.22`, o classificador obteve **os melhores resultados de todos os modelos:**
+*   **ROC-AUC:** **$0.8531$**
+*   **Recall:** **$90.4\%$** (Identifica 9 em cada 10 abandonos reais)
+*   **Precisão:** **$83.7\%$**
+*   **F1-Score:** **$86.9\%$**
+*   **Acurácia:** **$81.1\%$**
 
 ### Como a Calibração Resolveu as Fraquezas dos Modelos Anteriores?
 Modelos de Boosting tendem a gerar probabilidades distorcidas (achatadas nos extremos) quando treinados com classes desbalanceadas. A **Calibração Isotônica** mapeou as saídas brutas do modelo diretamente para a probabilidade populacional histórica de abandono ($\approx 19.4\%$).
 
 Isso permitiu agrupar com precisão matemática os pacientes em **Faixas Clínicas de Risco**. Note que a proporção em cada faixa varia conforme o volume de abandono de cada banco:
 
-*   **Distribuição no Treino Completo (População Real a $19.4\%$ de abandono):**
-    1.  **Baixo Risco ($<30\%$):** $79.9\%$ dos pacientes. Seguem o acompanhamento comum.
-    2.  **Médio Risco ($30\% - 60\%$):** $14.9\%$ dos pacientes. Recebem atenção moderada (ligações e SMS de alerta).
-    3.  **Alto Risco ($\ge 60\%$):** $5.1\%$ dos pacientes. SUS foca suporte psicossocial e visitas domiciliares.
-*   **Distribuição no Teste 2 / Dashboard (Base de Teste a $34.1\%$ de abandono real):**
-    *   **Baixo Risco:** $68.9\%$ (13.787 pacientes) | **Médio Risco:** $20.5\%$ (4.093 pacientes) | **Alto Risco:** $10.6\%$ (2.120 pacientes).
-    *   *Por que mudou?* Como a base `teste2.csv` é composta por uma taxa de abandonos reais mais alta ($34.1\%$), o modelo calibrado identifica corretamente essa gravidade elevando a probabilidade individual da amostra, distribuindo de forma lógica os casos em faixas média e alta de risco. Isso comprova a sensibilidade e eficácia do calibrador.
+*   **Distribuição no Treino Completo (População Real a $\approx 19.5\%$ de abandono):**
+    1.  **Baixo Risco ($<30\%$):** $80.6\%$ dos pacientes. Seguem o acompanhamento comum.
+    2.  **Médio Risco ($30\% - 60\%$):** $14.7\%$ dos pacientes. Recebem atenção moderada (ligações e SMS de alerta).
+    3.  **Alto Risco ($\ge 60\%$):** $4.7\%$ dos pacientes. SUS foca suporte psicossocial e visitas domiciliares.
+*   **Distribuição no Teste 2 / Dashboard (Base de Teste a $69.4\%$ de abandono real):**
+    *   **Baixo Risco:** $32.8\%$ (207 pacientes) | **Médio Risco:** $35.7\%$ (225 pacientes) | **Alto Risco:** $31.5\%$ (199 pacientes).
+    *   *Por que mudou?* Como a base `teste2.csv` é composta por uma taxa de abandonos reais muito alta ($69.4\%$), o modelo calibrado identifica corretamente essa gravidade elevando a probabilidade individual da amostra, distribuindo de forma lógica os casos em faixas média e alta de risco. Isso comprova a sensibilidade e eficácia do calibrador.
 
 ---
 
@@ -130,11 +138,11 @@ Isso permitiu agrupar com precisão matemática os pacientes em **Faixas Clínic
 Para que a equipe médica confie nas tomadas de decisão da IA, o pipeline gera análises gráficas em `resultados/analise/`:
 
 *   **Permutation Importance:** Avalia a perda média no score de ROC-AUC quando embaralhamos os valores de uma coluna. As top-5 mais importantes são:
-    1.  `idade_anos`: Jovens adultos tendem a abandonar mais por motivos laborais, enquanto idosos sofrem com logística para locomoção diária até a unidade (tratamento supervisionado).
-    2.  `TRATAMENTO_3` (Abandono anterior de tratamento de tuberculose): O principal preditor do modelo. Pacientes com histórico de desistência prévia têm altíssimo risco de repetir o comportamento.
-    3.  `POP_LIBER` (População privada de liberdade): Barreiras institucionais e transferências do sistema carcerário.
-    4.  `AGRAVDROGA` (Uso de drogas ilícitas): Marcador de alta vulnerabilidade social associado à quebra de rotinas de tratamento.
-    5.  `SG_UF_NOT` (UF de notificação): Mostra a variação geográfica no comportamento do tratamento e na qualidade da coleta de dados.
+    1.  `TRATAMENTO_3` (Reingresso após abandono): O principal preditor do modelo. Pacientes com histórico de desistência prévia têm altíssimo risco de repetir o comportamento.
+    2.  `idade_anos`: Jovens adultos tendem a abandonar mais por motivos laborais, enquanto idosos sofrem com logística para locomoção diária até a unidade (tratamento supervisionado).
+    3.  `AGRAVDROGA` (Uso de drogas ilícitas): Marcador de alta vulnerabilidade social associado à quebra de rotinas de tratamento.
+    4.  `POP_LIBER` (População privada de liberdade): Barreiras institucionais e transferências do sistema carcerário.
+    5.  `NU_CONTATO` (Número de contatos): Ausência de rede de apoio registrada indica fragilidade social.
 *   **SHAP Values (Beeswarm & Barras):** Explica o impacto local de cada variável. Permite rastrear exatamente a causa de um paciente ser considerado de Alto Risco (ex: Paciente X é alto risco por ser jovem, usuário de substâncias e estar em retratamento).
 
 ---
