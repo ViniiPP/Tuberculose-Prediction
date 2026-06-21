@@ -237,3 +237,41 @@ Para facilitar a correção e demonstrar o comportamento do classificador calibr
 *   **Tratamento supervisionado (DOT)?:** Não
 *   **Institucionalizado?:** Não
 *   **Recebe benefício governamental?:** Não
+
+---
+
+## 10. Deploy — Hospedagem no Render
+
+O sistema está hospedado na plataforma [Render](https://render.com) como um **Web Service**, utilizando o plano gratuito.
+
+### Link do projeto em produção
+
+[https://tuberculose-prediction.onrender.com](https://tuberculose-prediction.onrender.com)
+
+### Arquitetura do Deploy
+
+O frontend (HTML/CSS/JS) e a API (FastAPI) rodam em **um único serviço**. O FastAPI serve os arquivos estáticos do frontend montando a pasta `app/frontend/` na raiz (`/`), enquanto as rotas de API (`/predict` e `/api/health`) continuam acessíveis normalmente.
+
+| Rota | Função |
+| :--- | :--- |
+| `GET /` | Frontend da ferramenta de avaliação clínica |
+| `POST /predict` | API de predição de risco de abandono |
+| `GET /api/health` | Health check do serviço |
+
+### O que foi necessário para o deploy
+
+1. **`requirements.txt`** — Dependências Python do projeto
+2. **`app/backend/main.py`** — Adicionado `StaticFiles` para servir o frontend
+3. **`app/frontend/app.js`** — URL da API alterada de `localhost:8000/predict` para `/predict` (relativa)
+4. **`dockerfile`** — Atualizado para copiar o projeto e rodar `uvicorn`
+5. **`.gitignore`** — Liberada exceção para `pipeline/modelo/*.joblib` (modelos treinados)
+
+### Como reproduzir
+
+1. Faça push do repositório para o GitHub
+2. No [dashboard do Render](https://dashboard.render.com), clique em **New + > Web Service**
+3. Conecte o repositório e configure:
+   - **Build Command:** `pip install --prefer-binary -r requirements.txt`
+   - **Start Command:** `uvicorn app.backend.main:app --host 0.0.0.0 --port $PORT`
+4. Clique em **Create Web Service**
+
