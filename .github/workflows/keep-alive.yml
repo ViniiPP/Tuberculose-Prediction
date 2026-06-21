@@ -1,0 +1,9 @@
+name: keep-alive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -sf https://tuberculose-prediction.onrender.com/api/health
