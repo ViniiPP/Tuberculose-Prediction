@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from pydantic import BaseModel, Field
 from typing import Optional
 import sys
@@ -42,7 +44,7 @@ class PacienteInput(BaseModel):
     BENEF_GOV: Optional[str] = None
 
 
-@app.get("/")
+@app.get("/api/health")
 def health():
     return {"status": "ok", "servico": "LTFU API"}
 
@@ -54,3 +56,9 @@ def predicao(dados: PacienteInput):
         return resultado
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Servir o frontend estaticamente (as rotas de API têm prioridade)
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

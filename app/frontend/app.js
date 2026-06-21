@@ -275,7 +275,7 @@ async function calcularRisco(evento) {
   const dadosPaciente = coletarDados();
 
   try {
-    const resposta = await fetch('http://localhost:8000/predict', {
+    const resposta = await fetch('/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dadosPaciente),
@@ -368,8 +368,7 @@ function mostrarErroServidor() {
     <span class="toast-icon">⚠️</span>
     <div class="toast-body">
       <strong>Servidor offline</strong>
-      <span>Não foi possível conectar ao backend. Inicie com:</span>
-      <code>uvicorn app.backend.main:app --reload --port 8000</code>
+      <span>Não foi possível conectar ao backend. Verifique se o servidor está rodando.</span>
     </div>
     <button onclick="this.parentElement.remove()" class="toast-close">✕</button>
   `;

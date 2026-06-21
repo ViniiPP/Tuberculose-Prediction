@@ -31,6 +31,7 @@ env/
 # Modelos treinados (binários grandes)
 *.pkl
 *.joblib
+!pipeline/modelo/*.joblib
 *.h5
 *.keras
 
