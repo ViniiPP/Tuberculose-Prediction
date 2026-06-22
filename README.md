@@ -1,10 +1,100 @@
 # Tuberculosis LTFU Prediction — Relatório de Modelagem e Produção
 
+Bem-vindo(a) ao repositório oficial do projeto de previsão de **Loss to Follow-up (LTFU)** — Abandono no tratamento de Tuberculose.
+
+## Alunos no projeto:
+- **Vinícius Pereira Polli** — Líder e Desenvolvedor Principal, responsável pelas Pipelines de ML, Integrações Web e LLMs
+- **Maria Eduarda Dornelles** — Analista de Qualidade (QA), responsável pela validação das Pipelines, Integrações Web e LLMs
+- **Julia Braccini** — Pesquisa Bibliográfica e Redação do Relatório
+- **Henrique Zanfir** — Pesquisa Bibliográfica e Redação do Relatório
+- **Roberto Jacobs** — Pesquisa Bibliográfica e Redação do Relatório
+- **Eduardo Vanin** — Pesquisa Bibliográfica e Redação do Relatório
+
+---
+
+## Introdução ao Projeto
+
 Este projeto apresenta o desenvolvimento e a comparação de modelos de Machine Learning para a predição do risco de perda de seguimento / abandono do tratamento de Tuberculose (LTFU - *Loss to Follow-up*), utilizando dados reais de saúde pública do SINAN (Sistema de Informação de Agravos de Notificação).
 
 A seguir, apresenta-se o relatório técnico e metodológico estruturado para avaliação acadêmica detalhada.
 
 ---
+
+## Origem e Conjunto de Dados
+
+Para garantir integridade rigorosa da divisão preditiva sem risco de *vazamento temporal de dados*, os registros (totalizando acima de 500 mil pacientes ao longo dos anos) já foram submetidos a pré-processamento. 
+
+Os dados não são baixados dinamicamente do Ministério, mas sim providenciados de forma controlada através do **Google Drive do professor**. Todos estão estruturados em raiz (e unificados em arquivo `.feather` ou planilhas `.csv`) bastando serem mantidos na mesma base do projeto.
+
+🔗 **Link dos Dados Oficiais**: [Drive com os dados para download](https://drive.google.com/drive/folders/13BOVwEUAK8QolcCXbvhkNtaSci3sECEd?usp=sharing)
+
+---
+
+## Guia Rápido de Reprodução
+
+Preparamos um material simplificado e extremamente direto com o **passo a passo de como rodar do zero e replicar os treinamentos**. 
+
+> Acesse: [Instruções Oficiais de Execução (Docker ou Local)](./Instrucoes/README.md)
+
+---
+
+## 📂 Estrutura Exata do Projeto
+
+```text
+📁 tuberculosis-ltfu-prediction
+├── 📁 .github/              (Configurações de CI e workflows)
+├── 📁 app/                  (Arquitetos Front e Back Clínico - FastApi + JS)
+├── 📁 docs/                 (Documentos explicativos do projeto gerados)
+├── 📁 docs-sinan/           (Ofícios e manuais técnicos das variáveis do SINAN)
+├── 📁 Instrucoes/           (Diretrizes de setup, builds e docker)
+├── 📁 pipeline/             (Motor de regras, preditores, preprocessor e treinamento)
+├── 📁 resultados/           (Repositório dos gráficos SHAP, dados finais e matrizes)
+├── 📁 scripts/              (Desenvolvimento dos Modelos Baselines - NN, Logística)
+├── 📁 siteDados/            (Dashboard Frontend Analytics dinâmico)
+├── 📄 .gitignore            
+├── 📄 dockerfile            (Infraestrutura de container para deploy / backend)
+├── 📄 gerar_csv.py          (Script de ingestão para o painel de PowerBI)
+├── 📄 README.md             
+├── 📄 requirements.txt      (Dependências de bibliotecas de ecossistema)
+├── 📄 resultados_modelo.csv (Saídas de predições consolidadas pelo HGB)
+└── 📄 (Bases de Dados: teste1.csv, teste2.csv, treino.csv, unificado.feather)
+```
+
+---
+
+## Docs (Arquivos Gerados de Conhecimento)
+
+A pasta `/docs` foi preparada minuciosamente detalhando as principais bases metodológicas e teóricas desse desenvolvimento.
+
+1. **[Preparação de Dados](./docs/Preparação%20de%20dados.md):** Como limpamos e montamos a base de treino, além de detalhes e explicação das colunas de `preditores.py`.
+2. **[Treinamento Rede Neural](./docs/Treinamento%20Rede%20Neurarl.md):** Arquitetura complexa implementada com robustez estatística de camadas ocultas.
+3. **[Regressão Logística](./docs/Regressao%20Logística.md):** Modelo Baseline matemático de acompanhamento com altos benefícios na explicabilidade pontual.
+4. **[HistGradientBoost](./docs/HistGradientBoost.md):** Arquitetura vencedora e implementada para ambiente de produção.
+
+---
+
+### Estratégia de Avaliação e Treino
+1. **Rodada 1 (Treino -> Teste 1):** Treinamos a arquitetura consumindo os dados acumulados de longo registro (`treino.csv`) submetendo a performance de validação com a *primeira metade de 2025* (`teste1.csv`).
+
+3. **Rodada 2 (Teste Final -> Teste 2):** Após alinhamentos em hiperparâmetros ou calibração isotônica, submetemos a blindagem final contra a fatia mais intocada e ruidosa, a *segunda metade de 2025* (`teste2.csv`).
+
+---
+
+## Painéis Desenvolvidos (Front e Dashboard)
+
+1. **🏥 `app/` (Interface Médica):** 
+   Aplicação desenhada exclusivamente para ambiente clínico e de uso das triagens do governo. Trata-se do Front + Backend interagindo em tempo real: o médico ou gestor submete um formulário amigável de tela, e de imediato o motor devolve com um ponteiro se aquele quadro constitui risco *Baixo*, *Médio* ou *Alto*.
+   
+2. **📊 `siteDados/` (PowerBI Dinâmico):** 
+   Uma aplicação desenhada para *Analytics* global e auditoria. Basta carregar o relatório massivo das predições de produção para assistir na tela os principais KPI's dinâmicos de Saúde, Distribuição demográfica de Riscos previstos e Realidade de Acerto.
+
+---
+
+## 🔌 API REST (Infraestrutura)
+Há um sistema de retaguarda montado via **FastAPI** (`app/backend/main.py`) provendo uma interface Swagger automática onde as predições de Loss to Follow-up são geradas enviando as propriedades da matriz numa requisição HTTP no endpoint `POST /predict`.
+
+---
+
 
 ## 1. Glossário de Métricas — O que significa cada valor?
 
@@ -29,8 +119,11 @@ Apenas preditores obtidos no **momento da notificação inicial** do caso foram 
 ### B. Divisão dos Dados e Origem das Bases
 Para garantir a padronização e confiabilidade da avaliação, utilizamos diretamente os conjuntos de dados pré-processados e validados fornecidos pelo professor em seu drive:
 *   **Treino (`treino.csv`):** Contém os dados históricos acumulados de múltiplos anos passados, totalizando **562.632 pacientes** (com taxa de abandono populacional de $\approx 19.4\%$).
+  
 *   **Teste (`teste1.csv` e `teste2.csv`):** Conjuntos de teste divididos para validação de experimentos (`teste1.csv` com **631 pacientes**, $\approx 43.9\%$ de abandonos) e avaliação final (`teste2.csv` com **631 pacientes**, $\approx 69.4\%$ de abandonos).
+  
 *   **A "Ilusão" do F1-Score no Teste:** As taxas de abandono nas bases de teste são consideravelmente mais elevadas que a histórica de treino ($\approx 19.4\%$). Isso ocorre pelo perfil de registros recentes de 2025 já finalizados, capturando os abandonos rápidos.
+  
 *   **A Solução Metodológica:** Mantivemos a calibração isotônica para corrigir e suavizar as predições probabilísticas de volta à realidade epidemiológica clínica.
 
 ### C. Otimização de Processamento (Dados do Professor)
@@ -274,4 +367,3 @@ O frontend (HTML/CSS/JS) e a API (FastAPI) rodam em **um único serviço**. O Fa
    - **Build Command:** `pip install --prefer-binary -r requirements.txt`
    - **Start Command:** `uvicorn app.backend.main:app --host 0.0.0.0 --port $PORT`
 4. Clique em **Create Web Service**
-

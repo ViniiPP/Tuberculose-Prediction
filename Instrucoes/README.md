@@ -2,6 +2,8 @@
 
 Guia completo para configurar o ambiente e rodar o projeto do zero utilizando Docker.
 
+🔗 Voltar para o **[Guia Principal e Visão Geral do Projeto](../README.md)**
+
 ---
 
 ## Passo 1 — Construir a Imagem Docker
@@ -176,98 +178,9 @@ uvicorn app.backend.main:app --host 0.0.0.0 --port 8000
 
 ---
 
----
-
 # Estrutura do Projeto
 
-Descrição de cada arquivo e pasta na raiz do projeto.
+Consulte a estrutura completa e suas explicações aprofundadas no README raiz ou através dos novos documentos elaborados em `/docs/` para entendimento algorítmico do fluxo.
 
----
-
-## Arquivos na raiz
-
-| Arquivo | Descrição |
-|---|---|
-| `treino.csv` | Conjunto de treino principal — dados históricos do SINAN pré-processados pelo professor |
-| `teste1.csv` | Conjunto de validação — usado para avaliar os modelos durante o desenvolvimento |
-| `teste2.csv` | Conjunto de teste final — avaliação definitiva do modelo e geração do CSV do dashboard |
-| `gerar_csv.py` | Script que usa o modelo de produção para gerar o `resultados_modelo.csv` do dashboard |
-| `resultados_modelo.csv` | Arquivo gerado pelo `gerar_csv.py` — saída do modelo sobre o teste2, usado no dashboard |
-| `IA.md` | Documento de briefing do projeto — objetivos, regras e escopo definidos pelo professor |
-| `README.md` | README principal do projeto (visão geral) |
-| `.gitignore` | Arquivos ignorados pelo Git (dados brutos, modelos serializados, `.venv`) |
-| `dockerfile` | Configuração Docker para containerização |
-
----
-
-## Pastas na raiz
-
-### `pipeline/`
-Módulo central do projeto — tudo que envolve pré-processamento e produção.
-
-| Arquivo | O que faz |
-|---|---|
-| `preditores.py` | **Ponto único de verdade** das variáveis. Define quais colunas entram no modelo (21 preditores), o nome da variável-alvo e os thresholds de risco (30% = baixo, 60% = alto) |
-| `preprocessor.py` | Transforma os dados brutos do SINAN em features numéricas para o modelo. Cuida de: encoding binário (1=Sim, 2=Não), imputação de valores faltantes, escalonamento, OHE e TargetEncoder para UF |
-| `pipeline_final.py` | Treina o modelo de produção com todos os dados. Compara RandomForest vs HistGradientBoosting por cross-validation, usa o vencedor com calibração de probabilidades (`CalibratedClassifierCV`). Também expõe a função `predict(dados)` usada pelo backend |
-| `__init__.py` | Marca a pasta como módulo Python para facilitar os imports |
-| `modelo/` | Pasta gerada após rodar `pipeline_final.py`. Contém os arquivos `.joblib` do preprocessador e do modelo treinado |
-
----
-
-### `scripts/`
-Scripts de experimento e análise — **não são usados em produção**, servem para desenvolvimento, comparação e apresentação dos resultados.
-
-| Arquivo/Pasta | O que faz |
-|---|---|
-| `regressao_logistica/treino_regressao.py` | Treina e avalia a **Regressão Logística** como modelo baseline. Usa regularização L2 (`C=0.1`), `class_weight="balanced"` e busca o threshold ideal por F1-score. Gera curvas ROC, matrizes de confusão e métricas em `resultados/regressao_logistica/` |
-| `rede_neural/treino_rede_neural.py` | Treina e avalia a **Rede Neural (MLPClassifier)** com camadas `(128, 64, 32)`, regularização L2 e early stopping. Segue o mesmo fluxo do baseline: avalia em teste1, retreina, avalia em teste2. Gera curvas de aprendizado e métricas em `resultados/rede_neural/` |
-| `analise_features.py` | Gera análises avançadas sobre o modelo final: **SHAP values** (importância e direção de cada feature), **Permutation Importance**, **validação cruzada 5-fold** e **curva de calibração**. Todos os gráficos vão para `resultados/analise/` |
-
----
-
-### `app/`
-Interface clínica para uso do médico em consulta.
-
-| Arquivo/Pasta | O que faz |
-|---|---|
-| `frontend/index.html` | Página da interface médica. TailwindCSS + Lucide Icons. Formulário com 4 seções: dados do paciente, dados clínicos, agravidades e acompanhamento |
-| `frontend/app.js` | Lógica da interface médica. Coleta dados do formulário, envia para o backend (`/predict`), exibe o resultado com gauge animado e salva histórico no navegador (`localStorage`) |
-| `backend/main.py` | API FastAPI. Expõe o endpoint `POST /predict` que recebe os dados do paciente e retorna probabilidade e nível de risco usando o modelo de produção |
-
----
-
-### `siteDados/`
-Dashboard de apresentação para a turma.
-
-| Arquivo | O que faz |
-|---|---|
-| `frontend/index.html` | Página do dashboard. TailwindCSS + Lucide Icons. Zona de drag-and-drop para o CSV |
-| `frontend/app.js` | Carrega o CSV, calcula métricas técnicas em tempo real (Precisão, Recall, F1, Acurácia) e renderiza: KPIs, distribuição de risco (pizza + barras), histograma de probabilidades, acertos por nível de risco, real vs previsto e tabela paginada |
-
----
-
-### `resultados/`
-Saídas geradas pelos scripts de treino e análise.
-
-| Subpasta | Conteúdo |
-|---|---|
-| `regressao_logistica/` | Métricas CSV, curvas ROC e matrizes de confusão da regressão logística |
-| `rede_neural/` | Métricas CSV, curvas de aprendizado, ROC e matrizes da rede neural |
-| `analise/` | Gerada após `analise_features.py`: SHAP beeswarm, SHAP barras, permutation importance, curva de calibração |
-
----
-
-### `docs-sinan/`
-Documentação oficial do SINAN fornecida pelo professor:
-- Caderno de análise da tuberculose
-- Dicionário de dados
-- Fichas de notificação e acompanhamento
-- Instrucional de preenchimento
-
----
-
-### `.venv/`
-Ambiente virtual Python local. Não é versionado pelo Git.
 
 
