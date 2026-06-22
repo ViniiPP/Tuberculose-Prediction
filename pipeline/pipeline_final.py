@@ -1,6 +1,6 @@
 """
 Pipeline final de produção.
-Treina o modelo HistGradientBoosting, aplica calibração e salva. Treina com todos os dados (treino + teste1 + teste2) e serializa o modelo.
+Treina o modelo HistGradientBoosting, aplica calibração e salva. Treina com todos os dados (treino + teste1 + teste2)
 """
 
 import os

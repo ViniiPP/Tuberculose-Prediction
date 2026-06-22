@@ -92,7 +92,7 @@ A pasta `/docs` foi preparada minuciosamente detalhando as principais bases meto
 ---
 
 ## 🔌 API REST (Infraestrutura)
-Há um sistema de retaguarda montado via **FastAPI** (`app/backend/main.py`) provendo uma interface Swagger automática onde as predições de Loss to Follow-up são geradas enviando as propriedades da matriz numa requisição HTTP no endpoint `POST /predict`.
+A infraestrutura de backend foi desenvolvida utilizando **FastAPI** (`app/backend/main.py`) e encontra-se em produção, hospedada no serviço em nuvem Render. Esta API provê uma interface onde as predições de Loss to Follow-up são geradas mediante o envio das propriedades da matriz através de uma requisição HTTP para o endpoint`POST /predict`.
 
 ---
 

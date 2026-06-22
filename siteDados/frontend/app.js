@@ -1,5 +1,5 @@
-
 // Dashboard LTFU — Resultados do Modelo
+
 // Estado Global
 let dadosBrutos     = [];
 let dadosFiltrados  = [];
@@ -226,7 +226,6 @@ function renderizarHistograma() {
 
 
 // Acertos por nivel de risco
-
 function renderizarAcertosPorRisco() {
   const niveis = ['alto', 'medio', 'baixo'];
   const qtdAcertos = [], qtdErros = [];

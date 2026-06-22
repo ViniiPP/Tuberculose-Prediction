@@ -1,5 +1,5 @@
 """
-Pipeline de pré-processamento compatível com scikit-learn.
+Pipeline de pré-processamento compatível com scikit-learn
 Uso: pipe = Pipeline([("prep", TuberculosePreprocessor()), ("clf", modelo)])
 """
 
@@ -52,7 +52,7 @@ def _limpar_numericos(X: pd.DataFrame) -> pd.DataFrame:
 
 class TuberculosePreprocessor(BaseEstimator, TransformerMixin):
     """
-    Transforma dados brutos do SINAN em features numéricas para os modelos.
+    Transforma dados brutos do SINAN em features numéricas para os modelos
     - Binários: 1=Sim→1, 2=Não→0, 9=Ignorado→NaN
     - Numéricos: IterativeImputer + RobustScaler
     - Categóricos: OneHotEncoder (baixa cardinalidade) / TargetEncoder (UF)

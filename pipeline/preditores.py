@@ -1,6 +1,6 @@
 """
-Preditores selecionados para o modelo LTFU de tuberculose.
-Importar este módulo nos scripts de treino e pipeline.
+Preditores selecionados para o modelo LTFU de tuberculose
+Importar este módulo nos scripts de treino e pipeline
 """
 
 # Preditores numéricos
