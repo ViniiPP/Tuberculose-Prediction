@@ -2,6 +2,16 @@
 
 Bem-vindo(a) ao repositório oficial do projeto de previsão de **Loss to Follow-up (LTFU)** — Abandono no tratamento de Tuberculose.
 
+## Alunos no projeto:
+- **Vinícius Pereira Polli** — Líder e Desenvolvedor Principal, responsável pelas Pipelines de ML, Integrações Web e LLMs
+- **Maria Eduarda Dornelles** — Analista de Qualidade (QA), responsável pela validação das Pipelines, Integrações Web e LLMs
+- **Julia Braccini** — Pesquisa Bibliográfica e Redação do Relatório
+- **Henrique Zanfir** — Pesquisa Bibliográfica e Redação do Relatório
+- **Roberto Jacobs** — Pesquisa Bibliográfica e Redação do Relatório
+- **Eduardo Vanin** — Pesquisa Bibliográfica e Redação do Relatório
+
+---
+
 ## Introdução ao Projeto
 
 Este projeto apresenta o desenvolvimento e a comparação de modelos de Machine Learning para a predição do risco de perda de seguimento / abandono do tratamento de Tuberculose (LTFU - *Loss to Follow-up*), utilizando dados reais de saúde pública do SINAN (Sistema de Informação de Agravos de Notificação).
