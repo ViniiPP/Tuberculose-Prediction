@@ -10,6 +10,7 @@ Bem-vindo(a) ao repositório oficial do projeto de previsão de **Loss to Follow
 - **Roberto Jacobs** — Pesquisa Bibliográfica e Redação do Relatório
 - **Eduardo Vanin** — Pesquisa Bibliográfica e Redação do Relatório
 
+- **Universidade** - Atitus Educação
 ---
 
 ## Introdução ao Projeto
